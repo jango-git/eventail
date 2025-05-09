@@ -1,0 +1,29 @@
+{
+  "name": "eventail",
+  "version": "0.0.1",
+  "description": "tiny typed priority emitter",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "jango",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jango-git/eventail.git"
+  },
+  "type": "module",
+  "dependencies": {},
+  "peerDependencies": {},
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
