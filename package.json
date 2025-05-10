@@ -24,6 +24,9 @@
   "dependencies": {},
   "peerDependencies": {},
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.32.0",
+    "@typescript-eslint/parser": "^8.32.0",
+    "eslint": "^9.26.0",
     "typescript": "^5.8.3"
   }
 }
