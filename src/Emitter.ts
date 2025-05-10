@@ -1,3 +1,5 @@
+export const DEFAULT_PRIORITY = 100;
+
 export type Callback = (...args: unknown[]) => void;
 
 export interface IEvent {
@@ -7,11 +9,22 @@ export interface IEvent {
   once?: boolean;
 }
 
-export const DEFAULT_PRIORITY = 100;
-
+/**
+ * Base event emitter class. Meant to be extended.
+ * Supports any string event with arbitrary arguments.
+ */
 export class Emitter {
   private listeners = new Map<string, IEvent[]>();
 
+  /**
+   * Registers a listener for the specified event.
+   *
+   * @param type Name of the event to listen for.
+   * @param callback Function to call when the event is emitted.
+   * @param context Optional `this` context for the callback.
+   * @param priority Execution priority (lower values are called earlier). Defaults to 100.
+   * @returns The current instance for chaining.
+   */
   public on(
     type: string,
     callback: Callback,
@@ -22,6 +35,16 @@ export class Emitter {
     return this;
   }
 
+  /**
+   * Registers a one-time listener for the specified event.
+   * The listener is automatically removed after the first call.
+   *
+   * @param type Name of the event to listen for.
+   * @param callback Function to call when the event is emitted.
+   * @param context Optional `this` context for the callback.
+   * @param priority Execution priority (lower values are called earlier). Defaults to 100.
+   * @returns The current instance for chaining.
+   */
   public once(
     type: string,
     callback: Callback,
@@ -32,53 +55,86 @@ export class Emitter {
     return this;
   }
 
+  /**
+   * Removes a listener from the specified event.
+   * If no callback is provided, removes all listeners for that event.
+   *
+   * @param type Name of the event.
+   * @param callback The callback to remove (optional).
+   * @param context Context to match if a callback is provided.
+   * @returns The current instance for chaining.
+   */
   public off(type: string, callback?: Callback, context?: unknown): this {
-    if (!this.listeners.has(type)) return this;
+    const current = this.listeners.get(type);
+    if (!current) return this;
 
-    const filtered = callback
-      ? this.listeners
-          .get(type)!
-          .filter(
-            (l) =>
-              l.callback !== callback || (context && l.context !== context),
-          )
-      : [];
+    if (!callback) {
+      this.listeners.delete(type);
+      return this;
+    }
+
+    const filtered = current.filter(
+      (l) =>
+        l.callback !== callback ||
+        (context !== undefined && l.context !== context),
+    );
 
     filtered.length
       ? this.listeners.set(type, filtered)
       : this.listeners.delete(type);
+
     return this;
   }
 
+  /**
+   * Emits an event, calling all listeners registered for it with the given arguments.
+   *
+   * @param type Name of the event to emit.
+   * @param args Arguments to pass to the event listeners.
+   * @returns `true` if any listeners were called, otherwise `false`.
+   */
   protected emit(type: string, ...args: unknown[]): boolean {
-    const listeners = this.listeners.get(type);
-    if (!listeners) return false;
+    const current = this.listeners.get(type);
+    if (!current?.length) return false;
 
-    for (const listener of [...listeners]) {
-      listener.callback.call(listener.context, ...args);
+    for (const listener of [...current]) {
+      listener.callback.apply(listener.context, args);
       if (listener.once) this.off(type, listener.callback, listener.context);
     }
 
     return true;
   }
 
+  /**
+   * Internal method to register a listener for an event.
+   *
+   * @param type Name of the event.
+   * @param callback Callback function.
+   * @param context `this` context for the callback.
+   * @param priority Listener execution priority.
+   * @param once Whether the listener should be called only once.
+   * @throws If the same callback and context are already registered for the event.
+   */
   private addListener(
     type: string,
     callback: Callback,
-    context?: unknown,
-    priority = DEFAULT_PRIORITY,
-    once = false,
+    context: unknown,
+    priority: number,
+    once: boolean,
   ): void {
-    const listeners = this.listeners.get(type) || [];
+    let list = this.listeners.get(type);
+    if (!list) {
+      list = [];
+      this.listeners.set(type, list);
+    }
 
-    if (
-      listeners.some((l) => l.callback === callback && l.context === context)
-    ) {
+    if (list.some((l) => l.callback === callback && l.context === context)) {
       throw new Error("Event listener already exists");
     }
 
-    listeners.push({ callback, context, priority, once });
-    listeners.sort((a, b) => a.priority - b.priority);
-    this.listeners.set(type, listeners);
+    const event: IEvent = { callback, context, priority, once };
+    let i = 0;
+    while (i < list.length && list[i].priority <= priority) i++;
+    list.splice(i, 0, event);
   }
 }
