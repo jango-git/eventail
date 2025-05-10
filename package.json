@@ -1,9 +1,10 @@
 {
   "name": "eventail",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "tiny typed priority emitter",
   "scripts": {
-    "build": "rollup -c"
+    "clean": "rm -rf dist",
+    "build": "npm run clean && rollup -c"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
