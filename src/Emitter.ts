@@ -1,6 +1,6 @@
 export const DEFAULT_PRIORITY = 100;
 
-export type Callback = (...args: unknown[]) => void;
+export type Callback = (...args: any[]) => void;
 
 export interface IEvent {
   callback: Callback;
