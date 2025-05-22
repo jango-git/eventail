@@ -1,18 +1,19 @@
 # Eventail
 
-A tiny, typed, priority-based event emitter for TypeScript/JavaScript.
+A tiny, typed priority event emitter that makes complex event handling easy.
 
-The name "Eventail" is a combination of "event" + "tail", reflecting its queue-like nature with priority support.
+[![npm version](https://img.shields.io/npm/v/eventail.svg)](https://www.npmjs.com/package/eventail)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-%5E5.8.0-blue)](https://www.typescriptlang.org/)
 
 ## Features
 
-- 🏃‍♂️ Lightweight and zero dependencies
-- 📝 Full TypeScript support
-- ⚡ Priority-based event handling
-- 🎯 Context binding
-- 🔄 One-time event listeners
-- ⛓️ Chainable API
-- 🛡️ Duplicate listener protection
+- 🎯 Priority-based event handling
+- 🌟 Single and one-time event listeners
+- 🔄 Context binding support
+- ⚡ Lightweight and efficient
+- 📦 Full TypeScript support
+- 🧪 Zero dependencies
 
 ## Installation
 
@@ -22,103 +23,121 @@ npm install eventail
 
 ## Usage
 
-### Basic Example
+### Basic Event Handling
+
+Register and handle events with optional context:
 
 ```typescript
 import { Eventail } from 'eventail';
 
-const emitter = new Eventail();
+// Create event emitter
+const events = new Eventail();
 
 // Regular event listener
-emitter.on('data', (value) => console.log('Received:', value));
+events.on('data', (data) => {
+  console.log('Received:', data);
+});
 
-// High-priority listener (50 is higher priority than default 100)
-emitter.on('data', (value) => console.log('High priority:', value), null, 50);
+// With context and priority
+const handler = {
+  process(data) {
+    console.log(this.prefix, data);
+  },
+  prefix: 'Data:'
+};
 
-// One-time event listener
-emitter.once('init', () => console.log('Initialized'));
-
-// Remove specific listener
-const callback = (data) => console.log(data);
-emitter.on('event', callback);
-emitter.off('event', callback);
-
-// Remove all listeners for an event
-emitter.off('event');
+events.on('data', handler.process, handler, 50);  // Priority 50 (default is 100)
 ```
 
-### Custom Emitter
+### One-Time Events
+
+Listen for events that should only trigger once:
+
+```typescript
+// One-time event listener
+events.once('init', () => {
+  console.log('Initialized - this runs only once');
+});
+
+// With context and priority
+events.once('ready', handler.process, handler, 75);
+```
+
+### Priority System
+
+Lower numbers = higher priority:
+
+```typescript
+// High priority (50)
+events.on('event', () => console.log('First'), null, 50);
+
+// Default priority (100)
+events.on('event', () => console.log('Second'));
+
+// Low priority (150)
+events.on('event', () => console.log('Third'), null, 150);
+```
+
+### Removing Listeners
+
+Remove specific or all listeners:
+
+```typescript
+// Remove specific listener
+const callback = (data) => console.log(data);
+events.on('event', callback);
+events.off('event', callback);
+
+// Remove all listeners for an event
+events.off('event');
+```
+
+### Event Emission
+
+Protected emit method for derived classes:
 
 ```typescript
 class MyEmitter extends Eventail {
-  public send(data: string) {
-    this.emit('data', data);
+  public trigger(type: string, ...args: unknown[]) {
+    return this.emit(type, ...args);
   }
 }
 
 const myEmitter = new MyEmitter();
 myEmitter.on('data', console.log);
-myEmitter.send('Hello World!');
+myEmitter.trigger('data', 'Hello World!');
 ```
 
-### With Context
+## API Reference
 
-```typescript
-class Controller {
-  private value = 42;
-  
-  public handler(data: string) {
-    console.log(data, this.value);
-  }
-}
+### `on(type: string, callback: Callback, context?: unknown, priority = 100): this`
+Registers an event listener.
+- `type`: Event name to listen for
+- `callback`: Function to call when event occurs
+- `context`: (optional) `this` context for callback
+- `priority`: (optional) Priority level, lower = higher priority
 
-const controller = new Controller();
-const emitter = new Eventail();
+### `once(type: string, callback: Callback, context?: unknown, priority = 100): this`
+Registers a one-time event listener.
+- Same parameters as `on()`
+- Automatically removes itself after first execution
 
-// Bind the handler to controller instance
-emitter.on('data', controller.handler, controller);
-```
-
-## API
-
-### `on(type: string, callback: Function, context?: any, priority = 100): this`
-
-Adds an event listener.
-- `type`: Event name
-- `callback`: Function to call when the event occurs
-- `context`: (optional) `this` context for the callback
-- `priority`: (optional) Priority level (lower numbers = higher priority)
-
-### `once(type: string, callback: Function, context?: any, priority = 100): this`
-
-Adds a one-time event listener that removes itself after first execution.
-
-### `off(type: string, callback?: Function, context?: any): this`
-
+### `off(type: string, callback?: Callback, context?: unknown): this`
 Removes event listener(s).
-- Without `callback`: Removes all listeners for the event type
-- With `callback`: Removes specific listener
-- With `context`: Only removes if context matches
+- `type`: Event name
+- `callback`: (optional) Specific callback to remove
+- `context`: (optional) Specific context to match
 
-## Priority System
-
-Listeners are executed in priority order, with lower numbers indicating higher priority. Default priority is 100.
-
-```typescript
-// High priority (50)
-emitter.on('event', () => console.log('First'), null, 50);
-
-// Default priority (100)
-emitter.on('event', () => console.log('Second'));
-
-// Low priority (150)
-emitter.on('event', () => console.log('Third'), null, 150);
-```
+### `protected emit(type: string, ...args: unknown[]): boolean`
+Protected method for emitting events.
+- `type`: Event name to emit
+- `args`: Arguments to pass to listeners
+- Returns: `true` if event had listeners
 
 ## License
 
-MIT
+MIT © [jango](https://github.com/jango-git)
 
 ## Contributing
 
-Issues and pull requests are welcome on GitHub.
+Contributions are welcome! Please feel free to submit a Pull Request.
