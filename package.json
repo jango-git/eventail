@@ -1,6 +1,6 @@
 {
   "name": "eventail",
-  "version": "0.0.5",
+  "version": "0.1.6",
   "description": "tiny typed priority emitter",
   "scripts": {
     "clean": "rm -rf dist",
