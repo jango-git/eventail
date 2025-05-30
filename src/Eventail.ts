@@ -2,7 +2,7 @@
  * Default priority value for event listeners.
  * Lower values indicate higher priority.
  */
-export const DEFAULT_PRIORITY = 100;
+const DEFAULT_PRIORITY = 100;
 
 /**
  * Represents a callback function that can be invoked with any number of arguments.
@@ -24,25 +24,26 @@ export interface Event {
 }
 
 /**
- * A priority-based event emitter implementation.
+ * A high-performance, priority-based event emitter implementation.
  * The name "Eventail" is a combination of "event" + "tail", reflecting its queue-like nature.
- * 
+ *
  * Features:
  * - Priority-based event listeners
  * - Context binding support
  * - One-time event listeners
  * - Type-safe event handling
- * 
+ * - Optimized for performance
+ *
  * @example
  * ```typescript
  * const emitter = new Eventail();
- * 
+ *
  * // Regular event listener
  * emitter.on('event', (data) => console.log(data));
- * 
+ *
  * // One-time event listener with high priority
  * emitter.once('event', callback, context, 50);
- * 
+ *
  * // Remove specific listener
  * emitter.off('event', callback);
  * ```
@@ -51,20 +52,17 @@ export class Eventail {
   /** Map storing event listeners for each event type */
   private readonly listeners = new Map<string, Event[]>();
 
+  /** WeakMap for storing listener signatures to detect duplicates */
+  private readonly signatures = new WeakMap<Callback, Set<unknown>>();
+
   /**
    * Adds an event listener for the specified event type.
-   * 
+   *
    * @param type - The event type to listen for
    * @param callback - The function to be called when the event is emitted
    * @param context - Optional this context for the callback
    * @param priority - Optional priority value (lower = higher priority)
    * @returns The emitter instance for chaining
-   * 
-   * @example
-   * ```typescript
-   * emitter.on('data', (value) => console.log(value));
-   * emitter.on('error', handleError, this, 50);
-   * ```
    */
   public on(
     type: string,
@@ -78,17 +76,12 @@ export class Eventail {
 
   /**
    * Adds a one-time event listener that will be removed after first execution.
-   * 
+   *
    * @param type - The event type to listen for
    * @param callback - The function to be called when the event is emitted
    * @param context - Optional this context for the callback
    * @param priority - Optional priority value (lower = higher priority)
    * @returns The emitter instance for chaining
-   * 
-   * @example
-   * ```typescript
-   * emitter.once('init', () => console.log('Initialized'));
-   * ```
    */
   public once(
     type: string,
@@ -102,44 +95,61 @@ export class Eventail {
 
   /**
    * Removes event listener(s) from the specified event type.
-   * 
+   *
    * @param type - The event type to remove listener(s) from
    * @param callback - Optional callback to remove specific listener
    * @param context - Optional context to match when removing
    * @returns The emitter instance for chaining
-   * 
-   * @example
-   * ```typescript
-   * // Remove all listeners for 'data' event
-   * emitter.off('data');
-   * 
-   * // Remove specific listener
-   * emitter.off('data', callback);
-   * 
-   * // Remove listener with specific context
-   * emitter.off('data', callback, context);
-   * ```
    */
   public off(type: string, callback?: Callback, context?: unknown): this {
-    const current = this.listeners.get(type);
-    if (!current) {
+    const list = this.listeners.get(type);
+    if (!list?.length) {
+      this.listeners.delete(type);
       return this;
     }
 
     if (!callback) {
       this.listeners.delete(type);
+      for (const listener of list) {
+        const contexts = this.signatures.get(listener.callback);
+        if (contexts) {
+          contexts.delete(listener.context);
+          if (contexts.size === 0) {
+            this.signatures.delete(listener.callback);
+          }
+        }
+      }
       return this;
     }
 
-    const filtered = current.filter(
-      (l) =>
-        l.callback !== callback ||
-        (context !== undefined && l.context !== context),
-    );
+    // In-place filtering for better performance
+    let writeIndex = 0;
+    for (let readIndex = 0; readIndex < list.length; readIndex++) {
+      const listener = list[readIndex];
+      if (
+        listener.callback !== callback ||
+        (context !== undefined && listener.context !== context)
+      ) {
+        if (writeIndex !== readIndex) {
+          list[writeIndex] = listener;
+        }
+        writeIndex++;
+      } else {
+        const contexts = this.signatures.get(callback);
+        if (contexts) {
+          contexts.delete(listener.context);
+          if (contexts.size === 0) {
+            this.signatures.delete(callback);
+          }
+        }
+      }
+    }
 
-    filtered.length
-      ? this.listeners.set(type, filtered)
-      : this.listeners.delete(type);
+    if (writeIndex === 0) {
+      this.listeners.delete(type);
+    } else {
+      list.length = writeIndex;
+    }
 
     return this;
   }
@@ -147,31 +157,42 @@ export class Eventail {
   /**
    * Emits an event, triggering all registered listeners in priority order.
    * Protected method to allow extension in derived classes.
-   * 
+   *
    * @param type - The event type to emit
    * @param args - Arguments to pass to the listeners
    * @returns Boolean indicating if the event had listeners
-   * 
-   * @example
-   * ```typescript
-   * class MyEmitter extends Eventail {
-   *   public trigger(type: string, ...args: unknown[]) {
-   *     return this.emit(type, ...args);
-   *   }
-   * }
-   * ```
    */
   protected emit(type: string, ...args: unknown[]): boolean {
-    const current = this.listeners.get(type);
-    if (!current?.length) {
+    const list = this.listeners.get(type);
+    if (!list?.length) {
       return false;
     }
 
-    for (const listener of [...current]) {
+    let hasRemovals = false;
+    let i = 0;
+
+    // Direct array iteration without copying
+    while (i < list.length) {
+      const listener = list[i];
       listener.callback.apply(listener.context, args);
+
       if (listener.once) {
-        this.off(type, listener.callback, listener.context);
+        hasRemovals = true;
+        const contexts = this.signatures.get(listener.callback);
+        if (contexts) {
+          contexts.delete(listener.context);
+          if (contexts.size === 0) {
+            this.signatures.delete(listener.callback);
+          }
+        }
+        list.splice(i, 1);
+      } else {
+        i++;
       }
+    }
+
+    if (hasRemovals && list.length === 0) {
+      this.listeners.delete(type);
     }
 
     return true;
@@ -179,14 +200,7 @@ export class Eventail {
 
   /**
    * Internal method to add a new event listener with the specified configuration.
-   * Maintains priority order and prevents duplicate listeners.
-   * 
-   * @param type - Event type
-   * @param callback - Event callback
-   * @param context - Callback context
-   * @param priority - Event priority
-   * @param once - Whether it's a one-time listener
-   * @throws {Error} If the listener already exists
+   * Uses binary search for faster priority-based insertion.
    */
   private addListener(
     type: string,
@@ -195,21 +209,39 @@ export class Eventail {
     priority: number,
     once: boolean,
   ): void {
-    let list = this.listeners.get(type);
-    if (!list) {
-      list = [];
-      this.listeners.set(type, list);
+    // Check for duplicate listener
+    let contexts = this.signatures.get(callback);
+    if (contexts) {
+      if (contexts.has(context)) {
+        throw new Error("Event listener already exists");
+      }
+    } else {
+      contexts = new Set();
+      this.signatures.set(callback, contexts);
     }
-
-    if (list.some((l) => l.callback === callback && l.context === context)) {
-      throw new Error("Event listener already exists");
-    }
+    contexts.add(context);
 
     const event: Event = { callback, context, priority, once };
-    let i = 0;
-    while (i < list.length && list[i].priority <= priority) {
-      i++;
+    let list = this.listeners.get(type);
+
+    if (!list) {
+      this.listeners.set(type, [event]);
+      return;
     }
-    list.splice(i, 0, event);
+
+    // Binary search for insertion point
+    let left = 0;
+    let right = list.length;
+
+    while (left < right) {
+      const mid = (left + right) >>> 1;
+      if (list[mid].priority <= priority) {
+        left = mid + 1;
+      } else {
+        right = mid;
+      }
+    }
+
+    list.splice(left, 0, event);
   }
 }

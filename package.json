@@ -1,23 +1,37 @@
 {
   "name": "eventail",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "tiny typed priority emitter",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && rollup -c"
+    "build": "npm run clean && rollup -c",
+    "build:prod": "npm run clean && NODE_ENV=production rollup -c",
+    "prepublishOnly": "npm run build:prod"
   },
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": {
+        "development": "./dist/index.js",
+        "production": "./dist/index.min.js",
+        "default": "./dist/index.min.js"
+      }
     }
   },
   "files": [
     "dist"
   ],
-  "keywords": [],
+  "sideEffects": false,
+  "keywords": [
+    "events",
+    "emitter",
+    "priority",
+    "typed",
+    "typescript"
+  ],
   "author": "jango",
   "license": "MIT",
   "repository": {
@@ -25,10 +39,9 @@
     "url": "https://github.com/jango-git/eventail.git"
   },
   "type": "module",
-  "dependencies": {},
-  "peerDependencies": {},
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "eslint": "^9.26.0",
