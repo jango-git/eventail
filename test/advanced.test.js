@@ -289,13 +289,13 @@ test("should handle listener addition during event emission", () => {
   });
 
   emitter.triggerEvent("test");
-  // The newly added listener gets executed immediately in the current implementation
-  assert.equal(results, ["existing", "added-during"]);
+  // The newly added listener should NOT be executed in the current emission
+  assert.equal(results, ["existing"]);
 
   // Second emission should include both listeners
   results.length = 0;
   emitter.triggerEvent("test");
-  assert.equal(results, ["existing", "addexisting", "added-during"]);
+  assert.equal(results, ["existing", "added-during"]);
 });
 
 test.run();

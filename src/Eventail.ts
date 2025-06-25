@@ -71,7 +71,7 @@ export class Eventail {
     callback: Callback,
     context?: unknown,
     priority = DEFAULT_PRIORITY,
-  ): this {
+  ): Eventail {
     this.addListener(type, callback, context, priority, false);
     return this;
   }
@@ -103,7 +103,7 @@ export class Eventail {
    * @param context - Optional context to match when removing
    * @returns The emitter instance for chaining
    */
-  public off(type: string, callback?: Callback, context?: unknown): this {
+  public off(type: string, callback?: Callback, context?: unknown): Eventail {
     const list = this.listeners.get(type);
     if (!list?.length) {
       this.listeners.delete(type);
