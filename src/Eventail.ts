@@ -20,7 +20,9 @@ export interface Event {
   /** Priority of the event listener. Lower values indicate higher priority */
   priority: number;
   /** Whether the listener should be automatically removed after first execution */
-  once?: boolean;
+  once: boolean;
+  /** Whether the listener has been called at least once */
+  calledAtLeastOnce: boolean;
 }
 
 /**
@@ -168,31 +170,45 @@ export class Eventail {
       return false;
     }
 
+    const snapshot = list.slice();
     let hasRemovals = false;
-    let i = 0;
 
-    // Direct array iteration without copying
-    while (i < list.length) {
-      const listener = list[i];
+    for (let i = 0; i < snapshot.length; i++) {
+      const listener = snapshot[i];
       listener.callback.apply(listener.context, args);
 
       if (listener.once) {
         hasRemovals = true;
-        const contexts = this.signatures.get(listener.callback);
-        if (contexts) {
-          contexts.delete(listener.context);
-          if (contexts.size === 0) {
-            this.signatures.delete(listener.callback);
-          }
-        }
-        list.splice(i, 1);
-      } else {
-        i++;
+        listener.calledAtLeastOnce = true;
       }
     }
 
-    if (hasRemovals && list.length === 0) {
-      this.listeners.delete(type);
+    if (hasRemovals) {
+      // In-place filtering for better performance
+      let writeIndex = 0;
+      for (let readIndex = 0; readIndex < list.length; readIndex++) {
+        const listener = list[readIndex];
+        if (!listener.calledAtLeastOnce) {
+          if (writeIndex !== readIndex) {
+            list[writeIndex] = listener;
+          }
+          writeIndex++;
+        } else {
+          const contexts = this.signatures.get(listener.callback);
+          if (contexts) {
+            contexts.delete(listener.context);
+            if (contexts.size === 0) {
+              this.signatures.delete(listener.callback);
+            }
+          }
+        }
+      }
+
+      if (writeIndex === 0) {
+        this.listeners.delete(type);
+      } else {
+        list.length = writeIndex;
+      }
     }
 
     return true;
@@ -211,7 +227,7 @@ export class Eventail {
   ): void {
     // Check for duplicate listener
     let contexts = this.signatures.get(callback);
-    if (contexts) {
+    if (contexts !== undefined) {
       if (contexts.has(context)) {
         throw new Error("Event listener already exists");
       }
@@ -221,27 +237,33 @@ export class Eventail {
     }
     contexts.add(context);
 
-    const event: Event = { callback, context, priority, once };
-    let list = this.listeners.get(type);
+    const event: Event = {
+      callback,
+      context,
+      priority,
+      once,
+      calledAtLeastOnce: false,
+    };
+    let events = this.listeners.get(type);
 
-    if (!list) {
+    if (events === undefined) {
       this.listeners.set(type, [event]);
       return;
     }
 
     // Binary search for insertion point
     let left = 0;
-    let right = list.length;
+    let right = events.length;
 
     while (left < right) {
-      const mid = (left + right) >>> 1;
-      if (list[mid].priority <= priority) {
-        left = mid + 1;
+      const middle = (left + right) >>> 1;
+      if (events[middle].priority <= priority) {
+        left = middle + 1;
       } else {
-        right = mid;
+        right = middle;
       }
     }
 
-    list.splice(left, 0, event);
+    events.splice(left, 0, event);
   }
 }
