@@ -191,11 +191,51 @@ export abstract class Eventail {
         return this;
       }
 
-      for (let i = 1; i < lastIndex; i++) {
-        const listener = list[i];
-        if (listener.callback === callback && listener.context === context) {
-          list.splice(i, 1);
+      const smallLength = 10;
+      if (
+        listLength < smallLength ||
+        list[0].priority === list[lastIndex].priority
+      ) {
+        for (let i = 1; i < lastIndex; i++) {
+          const listener = list[i];
+          if (listener.callback === callback && listener.context === context) {
+            const priority = listenerData[2].getPriority(callback, context);
+            if (priority !== listener.priority) {
+              throw new Error(
+                `Priority mismatch, ${priority}, ${listener.priority}`,
+              );
+            }
+            list.splice(i, 1);
+            return this;
+          }
+        }
+      } else {
+        const priority = listenerData[2].getPriority(callback, context);
+        if (priority === undefined) {
           return this;
+        }
+
+        let l = 0;
+        let r = list.length - 1;
+
+        while (l <= r) {
+          const m = (l + r) >>> 1;
+          list[m].priority < priority ? (l = m + 1) : (r = m - 1);
+        }
+        const start = l;
+
+        r = list.length - 1;
+        while (l <= r) {
+          const m = (l + r) >>> 1;
+          list[m].priority <= priority ? (l = m + 1) : (r = m - 1);
+        }
+        const end = r;
+
+        for (let i = start; i <= end; i++) {
+          if (list[i].callback === callback && list[i].context === context) {
+            list.splice(i, 1);
+            return this;
+          }
         }
       }
     }
@@ -323,7 +363,7 @@ export abstract class Eventail {
       this.listeners.set(type, [
         [{ callback, context, priority, once, called: false }],
         false,
-        new ListenerIndex(callback, context),
+        new ListenerIndex(callback, context, priority),
       ]);
       return;
     }
@@ -333,7 +373,7 @@ export abstract class Eventail {
     if (listenerIndex.has(callback, context)) {
       throw new Error("Event listener already exists");
     }
-    listenerIndex.insert(callback, context);
+    listenerIndex.insert(callback, context, priority);
 
     const listener = { callback, context, priority, once, called: false };
 
@@ -360,17 +400,19 @@ export abstract class Eventail {
         return;
       }
 
-      // Binary search to find insertion point
-      let l = 0;
-      let r = list.length;
+      {
+        // Binary search to find insertion point
+        let l = 0;
+        let r = list.length;
 
-      while (l < r) {
-        const m = (l + r) >>> 1; // Unsigned right shift for fast division by 2
-        list[m].priority < priority ? (l = m + 1) : (r = m);
+        while (l < r) {
+          const m = (l + r) >>> 1; // Unsigned right shift for fast division by 2
+          list[m].priority < priority ? (l = m + 1) : (r = m);
+        }
+
+        // Insert at the found position
+        list.splice(l, 0, listener);
       }
-
-      // Insert at the found position
-      list.splice(l, 0, listener);
     }
   }
 }

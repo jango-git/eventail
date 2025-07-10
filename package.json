@@ -1,6 +1,6 @@
 {
   "name": "eventail",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Tiny event emitter with priority queuing",
   "scripts": {
     "clean": "rm -rf dist",

@@ -20,9 +20,12 @@
  */
 export class ListenerIndex {
   /** Maps context objects to their associated callback functions */
-  private readonly contextMap = new WeakMap<object | Symbol, Set<Function>>();
+  private readonly contextMap = new WeakMap<
+    object | Symbol,
+    Map<Function, number>
+  >();
   /** Stores callbacks that have no associated context */
-  private readonly noContextCallbacks = new Set<Function>();
+  private readonly noContextCallbacks = new Map<Function, number>();
 
   /**
    * Creates a new ListenerIndex instance with an initial callback-context pair.
@@ -32,12 +35,15 @@ export class ListenerIndex {
    *
    * @internal
    */
-  constructor(callback?: Function, context?: object | Symbol) {
+  constructor(callback?: Function, context?: object | Symbol, priority = 0) {
     if (callback !== undefined) {
       if (context === undefined) {
-        this.noContextCallbacks.add(callback);
+        this.noContextCallbacks.set(callback, priority);
       } else {
-        this.contextMap.set(context, new Set<Function>([callback]));
+        this.contextMap.set(
+          context,
+          new Map<Function, number>([[callback, priority]]),
+        );
       }
     }
   }
@@ -53,21 +59,28 @@ export class ListenerIndex {
    *
    * @internal
    */
-  public insert(callback: Function, context?: object | Symbol): void {
+  public insert(
+    callback: Function,
+    context?: object | Symbol,
+    priority = 0,
+  ): void {
     if (context === undefined) {
       if (this.noContextCallbacks.has(callback)) {
         return;
       }
 
-      this.noContextCallbacks.add(callback);
+      this.noContextCallbacks.set(callback, priority);
       return;
     }
 
     const callbacks = this.contextMap.get(context);
     if (callbacks === undefined) {
-      this.contextMap.set(context, new Set<Function>([callback]));
+      this.contextMap.set(
+        context,
+        new Map<Function, number>([[callback, priority]]),
+      );
     } else if (!callbacks.has(callback)) {
-      callbacks.add(callback);
+      callbacks.set(callback, priority);
     }
   }
 
@@ -116,6 +129,36 @@ export class ListenerIndex {
     if (context === undefined) {
       return this.noContextCallbacks.has(callback);
     }
-    return this.contextMap.get(context)?.has(callback) ?? false;
+    const callbacks = this.contextMap.get(context);
+    if (callbacks === undefined) {
+      return false;
+    }
+    return callbacks.has(callback);
+  }
+
+  /**
+   * Retrieves the priority value for a callback-context pair.
+   *
+   * This method allows querying the priority of a registered listener
+   * for potential reordering or priority-based operations.
+   *
+   * @param callback - The callback function to check
+   * @param context - Optional context object or Symbol to check association with
+   * @returns The priority value if the pair exists, `undefined` otherwise
+   *
+   * @internal
+   */
+  public getPriority(
+    callback: Function,
+    context?: object | Symbol,
+  ): number | undefined {
+    if (context === undefined) {
+      return this.noContextCallbacks.get(callback);
+    }
+    const callbacks = this.contextMap.get(context);
+    if (callbacks === undefined) {
+      return undefined;
+    }
+    return callbacks.get(callback);
   }
 }

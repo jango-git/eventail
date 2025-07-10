@@ -15,7 +15,7 @@ class TestEmitter extends Eventail {
 
 test("should handle large number of listeners efficiently", () => {
   const emitter = new TestEmitter();
-  const numListeners = 1000;
+  const numListeners = 10000;
   let callCount = 0;
 
   // Add many listeners with different contexts to avoid duplicates
@@ -44,7 +44,7 @@ test("should handle large number of listeners efficiently", () => {
 
 test("should handle many different events efficiently", () => {
   const emitter = new TestEmitter();
-  const numEvents = 1000;
+  const numEvents = 10000;
   let totalCalls = 0;
 
   // Add listeners to many different events
@@ -69,7 +69,7 @@ test("should handle many different events efficiently", () => {
 
 test("should handle priority insertion performance", () => {
   const emitter = new TestEmitter();
-  const numListeners = 1000;
+  const numListeners = 10000;
 
   const startTime = Date.now();
 
@@ -91,7 +91,7 @@ test("should handle priority insertion performance", () => {
 
 test("should handle mixed operations performance", () => {
   const emitter = new TestEmitter();
-  const numOperations = 1000;
+  const numOperations = 10000;
   let callCount = 0;
 
   const startTime = Date.now();
@@ -128,7 +128,7 @@ test("should handle mixed operations performance", () => {
 
 test("should handle high-frequency emissions", () => {
   const emitter = new TestEmitter();
-  const numEmissions = 1000;
+  const numEmissions = 10000;
   let callCount = 0;
 
   emitter.on("test", () => callCount++);
@@ -174,7 +174,7 @@ test("should handle memory efficiency with large arguments", () => {
 
 test("should handle once listeners performance", () => {
   const emitter = new TestEmitter();
-  const numListeners = 1000;
+  const numListeners = 10000;
   let callCount = 0;
 
   // Add many once listeners
@@ -216,7 +216,7 @@ test("should handle once listeners performance", () => {
 
 test("should handle priority ordering performance", () => {
   const emitter = new TestEmitter();
-  const numListeners = 1000;
+  const numListeners = 10000;
   const executionOrder: number[] = [];
 
   // Add listeners with random priorities
@@ -279,9 +279,48 @@ test("should handle context lookup performance", () => {
   assert.is(result, false);
 });
 
+test("should handle context lookup performance with random priority", () => {
+  const emitter = new TestEmitter();
+  const numContexts = 10000;
+  const contexts: Array<{ id: number }> = [];
+  const callbacks: Array<() => void> = [];
+
+  // Create many contexts and callbacks
+  for (let i = 0; i < numContexts; i++) {
+    contexts.push({ id: i });
+    callbacks.push(() => {});
+    emitter.on(
+      "test",
+      callbacks[i],
+      contexts[i],
+      Math.floor(Math.random() * 10),
+    );
+  }
+
+  // Test lookup performance
+  const startTime = Date.now();
+  for (let i = 0; i < numContexts; i++) {
+    emitter.off("test", callbacks[i], contexts[i]);
+  }
+  const duration = Date.now() - startTime;
+
+  const requiredDuration = 100;
+  assert.ok(
+    duration < requiredDuration,
+    `Context lookup with random priority duration: ${duration}ms, but expected less than ${requiredDuration}ms`,
+  );
+  console.log(
+    `Context lookup with random priority performance test completed in ${duration}ms`,
+  );
+
+  // Verify all removed
+  const result = emitter.emit("test");
+  assert.is(result, false);
+});
+
 test("should handle stress test with all operations", () => {
   const emitter = new TestEmitter();
-  const numCycles = 1000;
+  const numCycles = 10000;
   let totalCallCount = 0;
 
   const startTime = Date.now();
@@ -328,7 +367,7 @@ test("should handle stress test with all operations", () => {
 
 test("should handle memory cleanup performance", () => {
   const emitter = new TestEmitter();
-  const numCycles = 1000;
+  const numCycles = 10000;
 
   const startTime = Date.now();
 
@@ -358,7 +397,7 @@ test("should handle memory cleanup performance", () => {
 
 test("should handle concurrent-like operations performance", () => {
   const emitter = new TestEmitter();
-  const numOperations = 1000;
+  const numOperations = 10000;
   let callCount = 0;
 
   // Simulate concurrent-like operations by interleaving them
