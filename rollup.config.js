@@ -21,7 +21,7 @@ export default {
           module: true,
           toplevel: true,
           compress: {
-            passes: 3,
+            passes: 5,
             unsafe: true,
             unsafe_math: true,
             unsafe_methods: true,
