@@ -1,6 +1,7 @@
 import typescript from "rollup-plugin-typescript2";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
+import minifyPrivatesTransformer from "ts-transformer-minify-privates";
 
 export default {
   input: "src/index.ts",
@@ -27,28 +28,34 @@ export default {
             pure_getters: true,
             keep_fargs: false,
             drop_console: true,
-            drop_debugger: true
+            drop_debugger: true,
           },
           mangle: {
             properties: {
               regex: /^_/,
-              reserved: ['__esModule']
-            }
+              reserved: ["__esModule"],
+            },
           },
           format: {
             comments: false,
-            preserve_annotations: false
-          }
-        })
-      ]
-    }
+            preserve_annotations: false,
+          },
+        }),
+      ],
+    },
   ],
   plugins: [
     nodeResolve({ extensions: [".js", ".ts"] }),
     typescript({
       tsconfig: "tsconfig.json",
-      useTsconfigDeclarationDir: true
-    })
+      useTsconfigDeclarationDir: true,
+      transformers: [
+        (service) => ({
+          before: [minifyPrivatesTransformer.default(service.getProgram())],
+          after: [],
+        }),
+      ],
+    }),
   ],
-  external: ["three"]
+  external: [],
 };

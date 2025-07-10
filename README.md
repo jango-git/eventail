@@ -1,6 +1,6 @@
 # Eventail
 
-A tiny, typed priority event emitter that makes complex event handling easy.
+A tiny, typed priority event emitter abstract class that makes complex event handling easy.
 
 [![npm version](https://img.shields.io/npm/v/eventail.svg)](https://www.npmjs.com/package/eventail)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -25,28 +25,51 @@ npm install eventail
 
 ### Basic Event Handling
 
-Register and handle events with optional context:
+Extend Eventail and register event handlers:
 
 ```typescript
 import { Eventail } from 'eventail';
 
-// Create event emitter
-const events = new Eventail();
+// Define event names as enum for better type safety
+enum PlayerEvents {
+  EXPERIENCE_GAINED = 'experienceGained',
+  LEVELED_UP = 'leveledUp'
+}
+
+// Create a player character
+class Player extends Eventail {
+  private static readonly experienceFactor = 100;
+  private level = 1;
+  private experience = 0;
+
+  public gainExperience(amount: number) {
+    this.experience += amount;
+    this.emit(PlayerEvents.EXPERIENCE_GAINED, amount, this.experience);
+
+    if (this.experience >= this.level * Player.experienceFactor) {
+      this.level++;
+      this.experience = 0;
+      this.emit(PlayerEvents.LEVELED_UP, this.level);
+    }
+  }
+}
+
+const player = new Player();
 
 // Regular event listener
-events.on('data', (data) => {
-  console.log('Received:', data);
+player.on(PlayerEvents.EXPERIENCE_GAINED, (amount, total) => {
+  console.log(`Gained ${amount} XP (Total: ${total})`);
 });
 
 // With context and priority
-const handler = {
-  process(data) {
-    console.log(this.prefix, data);
+const ui = {
+  showNotification(message: string) {
+    console.log(`[${this.prefix}] ${message}`);
   },
-  prefix: 'Data:'
+  prefix: 'UI'
 };
 
-events.on('data', handler.process, handler, 50);  // Priority 50 (default is 100)
+player.on(PlayerEvents.LEVELED_UP, (level) => ui.showNotification(`Level up! Now level ${level}`), ui, -10);  // High priority
 ```
 
 ### One-Time Events
@@ -68,14 +91,14 @@ events.once('ready', handler.process, handler, 75);
 Lower numbers = higher priority:
 
 ```typescript
-// High priority (50)
-events.on('event', () => console.log('First'), null, 50);
+// High priority (-50)
+events.on('event', () => console.log('First'), null, -50);
 
-// Default priority (100)
+// Default priority (0)
 events.on('event', () => console.log('Second'));
 
-// Low priority (150)
-events.on('event', () => console.log('Third'), null, 150);
+// Low priority (50)
+events.on('event', () => console.log('Third'), null, 50);
 ```
 
 ### Removing Listeners
@@ -94,45 +117,68 @@ events.off('event');
 
 ### Event Emission
 
-Protected emit method for derived classes:
+Use the protected emit method in derived classes:
 
 ```typescript
-class MyEmitter extends Eventail {
-  public trigger(type: string, ...args: unknown[]) {
-    return this.emit(type, ...args);
+// Define event names as enum for better type safety
+enum GameObjectEvents {
+  HEALTH_CHANGED = 'healthChanged',
+  DIED = 'died'
+}
+
+class GameObject extends Eventail {
+  private health = 100;
+
+  public takeDamage(amount: number) {
+    this.health = Math.max(0, this.health - amount);
+    // Emit internal state change event
+    this.emit(GameObjectEvents.HEALTH_CHANGED, this.health);
+
+    if (this.health <= 0) {
+      this.emit(GameObjectEvents.DIED);
+    }
   }
 }
 
-const myEmitter = new MyEmitter();
-myEmitter.on('data', console.log);
-myEmitter.trigger('data', 'Hello World!');
+const gameObject = new GameObject();
+gameObject.on(GameObjectEvents.HEALTH_CHANGED, (health) => console.log('Health:', health));
+gameObject.on(GameObjectEvents.DIED, () => console.log('Game Over'));
+
+gameObject.takeDamage(50); // Health: 50
+gameObject.takeDamage(60); // Health: 0, Game Over
 ```
 
 ## API Reference
 
-### `on(type: string, callback: Callback, context?: unknown, priority = 100): this`
+### `on(type: string, callback: Callback, context?: object | Symbol, priority = 0): this`
 Registers an event listener.
 - `type`: Event name to listen for
 - `callback`: Function to call when event occurs
-- `context`: (optional) `this` context for callback
-- `priority`: (optional) Priority level, lower = higher priority
+- `context`: (optional) `this` context object or Symbol for callback
+- `priority`: (optional) Priority level, lower = higher priority (default: 0)
 
-### `once(type: string, callback: Callback, context?: unknown, priority = 100): this`
+**Note**: Listeners with the same priority have undefined execution order.
+
+### `once(type: string, callback: Callback, context?: object | Symbol, priority = 0): this`
 Registers a one-time event listener.
 - Same parameters as `on()`
 - Automatically removes itself after first execution
 
-### `off(type: string, callback?: Callback, context?: unknown): this`
+**Note**: Listeners with the same priority have undefined execution order.
+
+### `off(type: string, callback?: Callback, context?: object | Symbol): this`
 Removes event listener(s).
 - `type`: Event name
-- `callback`: (optional) Specific callback to remove
-- `context`: (optional) Specific context to match
+- `callback`: (optional) Specific callback to remove. If not provided, removes all listeners for the event
+- `context`: (optional) Specific context object or Symbol to match when removing
 
 ### `protected emit(type: string, ...args: unknown[]): boolean`
-Protected method for emitting events.
+Protected method for emitting events internally.
 - `type`: Event name to emit
 - `args`: Arguments to pass to listeners
 - Returns: `true` if event had listeners
+
+**Note**: This method is protected to allow the inheriting class to emit events internally when its state changes, maintaining encapsulation by preventing external entities from directly triggering events.
 
 ## License
 
