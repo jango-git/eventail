@@ -26,6 +26,21 @@ interface Listener {
 }
 
 /**
+ * Internal structure that holds the list of listeners for a specific event type,
+ * along with metadata used to manage the listeners.
+ *
+ * @internal
+ */
+interface ListenerData {
+  /** Array of registered event listeners for the event type */
+  listeners: Listener[];
+  /** Flag indicating whether the listener list is locked for safe mutation during emission */
+  isLocked: boolean;
+  /** Index to manage quick lookup and priority handling of listeners */
+  index: ListenerIndex;
+}
+
+/**
  * Abstract base class for high-performance, priority-based event emitters.
  *
  * The name "Eventail" is a combination of "event" + "tail", reflecting its queue-like nature.
@@ -70,10 +85,7 @@ export abstract class Eventail {
    *
    * Each entry contains: [listeners array, emit lock flag, listener index]
    */
-  private readonly listeners = new Map<
-    string,
-    [Listener[], boolean, ListenerIndex]
-  >();
+  private readonly listeners = new Map<string, ListenerData>();
 
   /**
    * Adds an event listener for the specified event type.
@@ -148,12 +160,12 @@ export abstract class Eventail {
     }
 
     // If the list is locked during emit, create a copy to avoid mutation during iteration
-    if (listenerData[1]) {
-      listenerData[1] = false;
-      listenerData[0] = listenerData[0].slice();
+    if (listenerData.isLocked) {
+      listenerData.isLocked = false;
+      listenerData.listeners = listenerData.listeners.slice();
     }
 
-    const list = listenerData[0];
+    const list = listenerData.listeners;
     if (list.length === 0) {
       this.listeners.delete(type);
       return this;
@@ -165,7 +177,7 @@ export abstract class Eventail {
       // Clean up listener index for all removed listeners
       for (let i = 0; i < list.length; i++) {
         const listener = list[i];
-        listenerData[2].remove(listener.callback, listener.context);
+        listenerData.index.remove(listener.callback, listener.context);
       }
       return this;
     }
@@ -199,7 +211,7 @@ export abstract class Eventail {
         for (let i = 1; i < lastIndex; i++) {
           const listener = list[i];
           if (listener.callback === callback && listener.context === context) {
-            const priority = listenerData[2].getPriority(callback, context);
+            const priority = listenerData.index.getPriority(callback, context);
             if (priority !== listener.priority) {
               throw new Error(
                 `Priority mismatch, ${priority}, ${listener.priority}`,
@@ -210,7 +222,7 @@ export abstract class Eventail {
           }
         }
       } else {
-        const priority = listenerData[2].getPriority(callback, context);
+        const priority = listenerData.index.getPriority(callback, context);
         if (priority === undefined) {
           return this;
         }
@@ -265,21 +277,21 @@ export abstract class Eventail {
       return false;
     }
 
-    if (listenerData[0].length === 0) {
+    if (listenerData.listeners.length === 0) {
       return false;
     }
 
     // Create a snapshot of listeners to iterate safely
     // This prevents issues if listeners are added/removed during emission
-    if (listenerData[1]) {
+    if (listenerData.isLocked) {
       // Already locked, create a new copy
-      listenerData[0] = listenerData[0].slice();
+      listenerData.listeners = listenerData.listeners.slice();
     } else {
       // Lock the current array to prevent mutations
-      listenerData[1] = true;
+      listenerData.isLocked = true;
     }
 
-    const snapshot = listenerData[0];
+    const snapshot = listenerData.listeners;
 
     // Execute all listeners in the snapshot
     let hasItemsToDelete = false;
@@ -301,11 +313,11 @@ export abstract class Eventail {
     }
 
     // Release the lock if we're working with the original array
-    if (actualListenerData[0] === snapshot) {
-      actualListenerData[1] = false;
+    if (actualListenerData.listeners === snapshot) {
+      actualListenerData.isLocked = false;
     }
 
-    const list = actualListenerData[0];
+    const list = actualListenerData.listeners;
 
     // Remove one-time listeners that were called
     if (hasItemsToDelete) {
@@ -317,7 +329,7 @@ export abstract class Eventail {
           list[w++] = listener;
         } else {
           // Remove called once-listener from index
-          actualListenerData[2].remove(listener.callback, listener.context);
+          actualListenerData.index.remove(listener.callback, listener.context);
         }
       }
 
@@ -360,32 +372,31 @@ export abstract class Eventail {
 
     // First listener for this event type
     if (listenerData === undefined) {
-      this.listeners.set(type, [
-        [{ callback, context, priority, once, called: false }],
-        false,
-        new ListenerIndex(callback, context, priority),
-      ]);
+      this.listeners.set(type, {
+        listeners: [{ callback, context, priority, once, called: false }],
+        isLocked: false,
+        index: new ListenerIndex(callback, context, priority),
+      });
       return;
     }
 
     // Check for duplicate listeners
-    const listenerIndex = listenerData[2];
-    if (listenerIndex.has(callback, context)) {
+    if (listenerData.index.has(callback, context)) {
       throw new Error("Event listener already exists");
     }
-    listenerIndex.insert(callback, context, priority);
+    listenerData.index.insert(callback, context, priority);
 
     const listener = { callback, context, priority, once, called: false };
 
     // If the list is locked during emit, create a copy to avoid mutation during iteration
-    if (listenerData[1]) {
-      listenerData[1] = false;
-      listenerData[0] = listenerData[0].slice();
+    if (listenerData.isLocked) {
+      listenerData.isLocked = false;
+      listenerData.listeners = listenerData.listeners.slice();
     }
 
     // Insert listener in priority order using optimized insertion
     {
-      const list = listenerData[0];
+      const list = listenerData.listeners;
       const priority = listener.priority;
 
       // Fast path: append if priority is lowest (most common case)
