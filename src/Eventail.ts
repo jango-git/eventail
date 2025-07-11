@@ -96,12 +96,8 @@ interface ListenerData {
  * @public
  */
 export abstract class Eventail {
-  /**
-   * Map storing event listeners for each event type.
-   *
-   * Each entry contains: [listeners array, emit lock flag, listener index]
-   */
-  private readonly listeners = new Map<string, ListenerData>();
+  /** Map storing event listeners for each event type */
+  private readonly listeners = new Map<string | number, ListenerData>();
 
   /**
    * Adds an event listener for the specified event type.
@@ -109,7 +105,7 @@ export abstract class Eventail {
    * Listeners are executed in priority order (lower values first).
    * The execution order of listeners with the same priority is undefined.
    *
-   * @param type - The event type to listen for
+   * @param type - The event type (string or number) to listen for
    * @param callback - The function to be called when the event is emitted
    * @param context - Optional this context object or Symbol for the callback
    * @param priority - Optional priority value (lower = higher priority)
@@ -118,7 +114,7 @@ export abstract class Eventail {
    * @public
    */
   public on(
-    type: string,
+    type: string | number,
     callback: Callback,
     context?: object | Symbol,
     priority = 0,
@@ -133,7 +129,7 @@ export abstract class Eventail {
    * Listeners are executed in priority order (lower values first).
    * The execution order of listeners with the same priority is undefined.
    *
-   * @param type - The event type to listen for
+   * @param type - The event type (string or number) to listen for
    * @param callback - The function to be called when the event is emitted
    * @param context - Optional this context object or Symbol for the callback
    * @param priority - Optional priority value (lower = higher priority)
@@ -142,7 +138,7 @@ export abstract class Eventail {
    * @public
    */
   public once(
-    type: string,
+    type: string | number,
     callback: Callback,
     context?: object | Symbol,
     priority = 0,
@@ -158,7 +154,7 @@ export abstract class Eventail {
    * If callback is provided, removes only matching listeners.
    * If context is also provided, removes only listeners with matching callback and context.
    *
-   * @param type - The event type to remove listener(s) from
+   * @param type - The event type (string or number) to remove listener(s) from
    * @param callback - Optional callback to remove specific listener
    * @param context - Optional context object or Symbol to match when removing
    * @returns The emitter instance for chaining
@@ -166,7 +162,7 @@ export abstract class Eventail {
    * @public
    */
   public off(
-    type: string,
+    type: string | number,
     callback?: Callback,
     context?: object | Symbol,
   ): Eventail {
@@ -274,13 +270,13 @@ export abstract class Eventail {
    * internally when its state changes, maintaining encapsulation by preventing
    * external entities from directly triggering events.
    *
-   * @param type - The event type to emit
+   * @param type - The event type (string or number) to emit
    * @param args - Arguments to pass to the listeners
    * @returns Boolean indicating if the event had listeners
    *
    * @protected
    */
-  protected emit(type: string, ...args: unknown[]): boolean {
+  protected emit(type: string | number, ...args: unknown[]): boolean {
     const listenerData = this.listeners.get(type);
     if (listenerData === undefined) {
       return false;
@@ -363,7 +359,7 @@ export abstract class Eventail {
    * Uses binary search for optimal priority-based insertion.
    * Prevents duplicate listeners by checking the listener index.
    *
-   * @param type - The event type to listen for
+   * @param type - The event type (string or number) to listen for
    * @param once - Whether the listener should be removed after first execution
    * @param priority - Priority value for the listener (lower = higher priority)
    * @param callback - The callback function
@@ -374,7 +370,7 @@ export abstract class Eventail {
    * @private
    */
   private addListener(
-    type: string,
+    type: string | number,
     once: boolean,
     priority: number,
     callback: Callback,

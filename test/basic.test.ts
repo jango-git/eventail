@@ -4,7 +4,7 @@ import { Eventail } from "../src/Eventail.js";
 
 // Helper class to access protected emit method
 class TestEmitter extends Eventail {
-  public emit(type: string, ...args: unknown[]): boolean {
+  public emit(type: string | number, ...args: unknown[]): boolean {
     return super.emit(type, ...args);
   }
 }
@@ -239,6 +239,55 @@ test("should not remove real listeners when removing with fake callback/context"
   const result = emitter.emit("test");
   assert.is(result, true);
   assert.is(realCallbackCalled, true);
+});
+
+test("should handle numeric event types", () => {
+  const emitter = new TestEmitter();
+  let called = false;
+  let receivedData: number | null = null;
+
+  emitter.on(42, (data: number) => {
+    called = true;
+    receivedData = data;
+  });
+
+  const result = emitter.emit(42, 123);
+
+  assert.is(result, true);
+  assert.is(called, true);
+  assert.is(receivedData, 123);
+});
+
+test("should handle mixed string and numeric events", () => {
+  const emitter = new TestEmitter();
+  const results: string[] = [];
+
+  emitter.on("string-event", () => results.push("string"));
+  emitter.on(100, () => results.push("number"));
+  emitter.on(0, () => results.push("zero"));
+  emitter.on(-5, () => results.push("negative"));
+
+  emitter.emit("string-event");
+  emitter.emit(100);
+  emitter.emit(0);
+  emitter.emit(-5);
+
+  assert.equal(results, ["string", "number", "zero", "negative"]);
+});
+
+test("should remove numeric event listeners correctly", () => {
+  const emitter = new TestEmitter();
+  let called = false;
+
+  const callback = () => {
+    called = true;
+  };
+
+  emitter.on(999, callback);
+  emitter.off(999, callback);
+  emitter.emit(999);
+
+  assert.is(called, false);
 });
 
 test.run();

@@ -4,7 +4,7 @@ import { Eventail } from "../src/Eventail.js";
 
 // Helper class to access protected emit method
 class TestEmitter extends Eventail {
-  public emit(type: string, ...args: unknown[]): boolean {
+  public emit(type: string | number, ...args: unknown[]): boolean {
     return super.emit(type, ...args);
   }
 }

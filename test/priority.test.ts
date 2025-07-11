@@ -4,7 +4,7 @@ import { Eventail } from "../src/Eventail.js";
 
 // Helper class to access protected emit method
 class TestEmitter extends Eventail {
-  public emit(type: string, ...args: unknown[]): boolean {
+  public emit(type: string | number, ...args: unknown[]): boolean {
     return super.emit(type, ...args);
   }
 }
@@ -146,7 +146,12 @@ test("should handle large priority ranges", () => {
 
   emitter.on("test", () => executionOrder.push("million"), undefined, 1000000);
   emitter.on("test", () => executionOrder.push("zero"), undefined, 0);
-  emitter.on("test", () => executionOrder.push("negative-million"), undefined, -1000000);
+  emitter.on(
+    "test",
+    () => executionOrder.push("negative-million"),
+    undefined,
+    -1000000,
+  );
 
   emitter.emit("test");
 
@@ -173,10 +178,30 @@ test("should handle priority with multiple event types", () => {
   const emitter = new TestEmitter();
   const results: { event: string; priority: string }[] = [];
 
-  emitter.on("event1", () => results.push({ event: "event1", priority: "high" }), undefined, 10);
-  emitter.on("event1", () => results.push({ event: "event1", priority: "low" }), undefined, 90);
-  emitter.on("event2", () => results.push({ event: "event2", priority: "high" }), undefined, 10);
-  emitter.on("event2", () => results.push({ event: "event2", priority: "low" }), undefined, 90);
+  emitter.on(
+    "event1",
+    () => results.push({ event: "event1", priority: "high" }),
+    undefined,
+    10,
+  );
+  emitter.on(
+    "event1",
+    () => results.push({ event: "event1", priority: "low" }),
+    undefined,
+    90,
+  );
+  emitter.on(
+    "event2",
+    () => results.push({ event: "event2", priority: "high" }),
+    undefined,
+    10,
+  );
+  emitter.on(
+    "event2",
+    () => results.push({ event: "event2", priority: "low" }),
+    undefined,
+    90,
+  );
 
   emitter.emit("event1");
   emitter.emit("event2");
@@ -185,7 +210,7 @@ test("should handle priority with multiple event types", () => {
     { event: "event1", priority: "high" },
     { event: "event1", priority: "low" },
     { event: "event2", priority: "high" },
-    { event: "event2", priority: "low" }
+    { event: "event2", priority: "low" },
   ]);
 });
 

@@ -91,13 +91,13 @@ events.once('ready', handler.process, handler, 75);
 Lower numbers = higher priority:
 
 ```typescript
-// High priority (-50)
+// High priority (-50) - using string event
 events.on('event', () => console.log('First'), null, -50);
 
-// Default priority (0)
-events.on('event', () => console.log('Second'));
+// Default priority (0) - using number event
+events.on(42, () => console.log('Second'));
 
-// Low priority (50)
+// Low priority (50) - using string event
 events.on('event', () => console.log('Third'), null, 50);
 ```
 
@@ -106,12 +106,12 @@ events.on('event', () => console.log('Third'), null, 50);
 Remove specific or all listeners:
 
 ```typescript
-// Remove specific listener
+// Remove specific listener - string event
 const callback = (data) => console.log(data);
 events.on('event', callback);
 events.off('event', callback);
 
-// Remove all listeners for an event
+// Remove all listeners for an event - string event
 events.off('event');
 ```
 
@@ -150,31 +150,31 @@ gameObject.takeDamage(60); // Health: 0, Game Over
 
 ## API Reference
 
-### `on(type: string, callback: Callback, context?: object | Symbol, priority = 0): this`
+### `on(type: string | number, callback: Callback, context?: object | Symbol, priority = 0): this`
 Registers an event listener.
-- `type`: Event name to listen for
+- `type`: Event name (string or number) to listen for
 - `callback`: Function to call when event occurs
 - `context`: (optional) `this` context object or Symbol for callback
 - `priority`: (optional) Priority level, lower = higher priority (default: 0)
 
 **Note**: Listeners with the same priority have undefined execution order.
 
-### `once(type: string, callback: Callback, context?: object | Symbol, priority = 0): this`
+### `once(type: string | number, callback: Callback, context?: object | Symbol, priority = 0): this`
 Registers a one-time event listener.
 - Same parameters as `on()`
 - Automatically removes itself after first execution
 
 **Note**: Listeners with the same priority have undefined execution order.
 
-### `off(type: string, callback?: Callback, context?: object | Symbol): this`
+### `off(type: string | number, callback?: Callback, context?: object | Symbol): this`
 Removes event listener(s).
-- `type`: Event name
+- `type`: Event name (string or number)
 - `callback`: (optional) Specific callback to remove. If not provided, removes all listeners for the event
 - `context`: (optional) Specific context object or Symbol to match when removing
 
-### `protected emit(type: string, ...args: unknown[]): boolean`
+### `protected emit(type: string | number, ...args: unknown[]): boolean`
 Protected method for emitting events internally.
-- `type`: Event name to emit
+- `type`: Event name (string or number) to emit
 - `args`: Arguments to pass to listeners
 - Returns: `true` if event had listeners
 

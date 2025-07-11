@@ -4,7 +4,7 @@ import { Eventail } from "../src/Eventail.js";
 
 // Helper class to access protected emit method
 class TestEmitter extends Eventail {
-  public emit(type: string, ...args: unknown[]): boolean {
+  public emit(type: string | number, ...args: unknown[]): boolean {
     return super.emit(type, ...args);
   }
 }
@@ -161,10 +161,10 @@ test("should handle nested objects", () => {
     level1: {
       level2: {
         level3: {
-          value: "deep"
-        }
-      }
-    }
+          value: "deep",
+        },
+      },
+    },
   };
 
   emitter.emit("test", nestedObj);
@@ -277,7 +277,7 @@ test("should handle complex mixed argument types", () => {
     new Date(),
     /regex/,
     Symbol("symbol"),
-    BigInt(42n)
+    BigInt(42n),
   ];
 
   emitter.emit("test", ...testArgs);
