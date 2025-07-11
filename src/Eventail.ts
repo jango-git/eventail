@@ -201,16 +201,12 @@ export abstract class Eventail {
     // Remove specific listener matching callback and optional context
     {
       const listLength = list.length;
-      if (listLength === 1) {
-        this.listeners.delete(type);
-      }
-
       if (list[0]._callback === callback && list[0]._context === context) {
-        list.shift();
+        listLength === 1 ? this.listeners.delete(type) : list.shift();
         return this;
       }
 
-      let lastIndex = listLength - 1;
+      const lastIndex = listLength - 1;
       if (
         list[lastIndex]._callback === callback &&
         list[lastIndex]._context === context

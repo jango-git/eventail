@@ -207,4 +207,38 @@ test("should clean up internal data structures when all listeners removed", () =
   assert.is(result, false);
 });
 
+test("should not remove real listeners when removing with fake callback/context", () => {
+  const emitter = new TestEmitter();
+  let realCallbackCalled = false;
+
+  const realCallback = () => {
+    realCallbackCalled = true;
+  };
+  const realContext = { id: "real" };
+
+  // Add real listener
+  emitter.on("test", realCallback, realContext);
+
+  // Try to remove with fake callback but same context
+  const fakeCallback = () => {};
+  emitter.off("test", fakeCallback, realContext);
+
+  // Try to remove with same callback but fake context
+  const fakeContext = { id: "fake" };
+  emitter.off("test", realCallback, fakeContext);
+
+  // Try to remove with both fake callback and context
+  emitter.off("test", fakeCallback, fakeContext);
+
+  // Real listener should still exist and work
+  emitter.emit("test");
+  assert.is(realCallbackCalled, true);
+
+  // Verify listener is still there by checking return value
+  realCallbackCalled = false;
+  const result = emitter.emit("test");
+  assert.is(result, true);
+  assert.is(realCallbackCalled, true);
+});
+
 test.run();
