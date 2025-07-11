@@ -5,7 +5,7 @@ import { ListenerIndex } from "./ListenerIndex";
  *
  * @public
  */
-export type Callback = (...args: any[]) => void;
+export type Callback = (...args: any[]) => any;
 
 /**
  * Interface representing an event listener configuration.
