@@ -1,6 +1,6 @@
 {
   "name": "eventail",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Tiny event emitter with priority queuing",
   "scripts": {
     "clean": "rm -rf dist",
@@ -20,7 +20,8 @@
         "production": "./dist/index.min.js",
         "default": "./dist/index.min.js"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
