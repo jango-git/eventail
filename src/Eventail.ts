@@ -5,6 +5,7 @@ import { ListenerIndex } from "./ListenerIndex";
  *
  * @public
  */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Using any here for generic condition function arguments */
 export type Callback = (...args: any[]) => any;
 
 /**

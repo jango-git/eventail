@@ -91,7 +91,7 @@ test("should handle multiple once listeners with same priority", () => {
 test("should handle mixed once and regular listeners with same callback", () => {
   const emitter = new TestEmitter();
   const results: string[] = [];
-  const callback = () => results.push("called");
+  const callback = (): number => results.push("called");
 
   emitter.on("test", callback, { type: "regular" });
   emitter.once("test", callback, { type: "once" });
@@ -109,7 +109,7 @@ test("should clean up once listeners with context properly", () => {
   const context = { id: "test" };
   let callCount = 0;
 
-  const callback = () => callCount++;
+  const callback = (): number => callCount++;
 
   emitter.once("test", callback, context);
   emitter.emit("test");
@@ -130,7 +130,7 @@ test("should handle once listeners with different contexts", () => {
   const context2 = { id: 2 };
   const results: number[] = [];
 
-  const callback = function (this: { id: number }) {
+  const callback = function (this: { id: number }): void {
     results.push(this.id);
   };
 
@@ -165,7 +165,7 @@ test("should handle once listeners removal before execution", () => {
   const emitter = new TestEmitter();
   let called = false;
 
-  const callback = () => {
+  const callback = (): void => {
     called = true;
   };
 

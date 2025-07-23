@@ -18,16 +18,16 @@ test("should handle listener removal during event emission", () => {
   const results: string[] = [];
   let callback2: () => void;
 
-  const callback1 = () => {
+  const callback1 = (): void => {
     results.push("callback1");
     emitter.off("test", callback2);
   };
 
-  callback2 = () => {
+  callback2 = (): void => {
     results.push("callback2");
   };
 
-  const callback3 = () => {
+  const callback3 = (): void => {
     results.push("callback3");
   };
 
@@ -278,7 +278,7 @@ test("should handle emission during listener removal", () => {
   const emitter = new TestEmitter();
   const results: string[] = [];
 
-  const callback = () => {
+  const callback = (): void => {
     results.push("callback");
     emitter.off("test", callback);
     emitter.emit("test"); // Should not cause infinite recursion
@@ -319,12 +319,12 @@ test("should handle memory management with frequent add/remove cycles", () => {
   const emitter = new TestEmitter();
 
   for (let cycle = 0; cycle < 100; cycle++) {
-    const callbacks: Array<() => void> = [];
-    const contexts: Array<{ id: number }> = [];
+    const callbacks: (() => void)[] = [];
+    const contexts: { id: number }[] = [];
 
     // Add listeners
     for (let i = 0; i < 10; i++) {
-      const callback = () => {};
+      const callback = (): void => {};
       const context = { id: i };
       callbacks.push(callback);
       contexts.push(context);

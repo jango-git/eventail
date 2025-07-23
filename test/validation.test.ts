@@ -15,7 +15,7 @@ class TestEmitter extends Eventail {
 
 test("should throw error for duplicate listeners", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = {};
 
   emitter.on("test", callback, context);
@@ -27,7 +27,7 @@ test("should throw error for duplicate listeners", () => {
 
 test("should throw error for duplicate listeners with undefined context", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
 
   emitter.on("test", callback);
 
@@ -38,7 +38,7 @@ test("should throw error for duplicate listeners with undefined context", () => 
 
 test("should throw error for duplicate once listeners", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = {};
 
   emitter.once("test", callback, context);
@@ -50,7 +50,7 @@ test("should throw error for duplicate once listeners", () => {
 
 test("should throw error for duplicate mixed on/once listeners", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = {};
 
   emitter.on("test", callback, context);
@@ -62,7 +62,7 @@ test("should throw error for duplicate mixed on/once listeners", () => {
 
 test("should allow same callback with different contexts", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context1 = { id: 1 };
   const context2 = { id: 2 };
 
@@ -74,7 +74,7 @@ test("should allow same callback with different contexts", () => {
 
 test("should allow same callback with and without context", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   assert.not.throws(() => {
@@ -85,8 +85,8 @@ test("should allow same callback with and without context", () => {
 
 test("should allow different callbacks with same context", () => {
   const emitter = new TestEmitter();
-  const callback1 = () => {};
-  const callback2 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
   const context = { id: 1 };
 
   assert.not.throws(() => {
@@ -97,8 +97,8 @@ test("should allow different callbacks with same context", () => {
 
 test("should allow different callbacks without context", () => {
   const emitter = new TestEmitter();
-  const callback1 = () => {};
-  const callback2 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
 
   assert.not.throws(() => {
     emitter.on("test", callback1);
@@ -108,7 +108,7 @@ test("should allow different callbacks without context", () => {
 
 test("should treat object references as different contexts", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context1 = { id: 1 };
   const context2 = { id: 1 }; // Same content, different reference
 
@@ -123,8 +123,8 @@ test("should treat function references as different callbacks", () => {
   const context = { id: 1 };
 
   // Same implementation, different function references
-  const callback1 = () => "same";
-  const callback2 = () => "same";
+  const callback1 = (): string => "same";
+  const callback2 = (): string => "same";
 
   assert.not.throws(() => {
     emitter.on("test", callback1, context);
@@ -134,7 +134,7 @@ test("should treat function references as different callbacks", () => {
 
 test("should allow re-adding listener after removal", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   emitter.on("test", callback, context);
@@ -147,7 +147,7 @@ test("should allow re-adding listener after removal", () => {
 
 test("should allow re-adding once listener after execution", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   emitter.once("test", callback, context);
@@ -160,11 +160,11 @@ test("should allow re-adding once listener after execution", () => {
 
 test("should handle validation with complex contexts", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
 
   const complexContext = {
     nested: { value: "test" },
-    method: function () {
+    method: function (): string {
       return this.nested.value;
     },
   };
@@ -178,7 +178,7 @@ test("should handle validation with complex contexts", () => {
 
 test("should handle validation with symbol contexts", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const symbolContext = Symbol("test");
 
   emitter.on("test", callback, symbolContext);
@@ -190,7 +190,7 @@ test("should handle validation with symbol contexts", () => {
 
 test("should handle validation with circular reference contexts", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
 
   const circularContext: any = { name: "circular" };
   circularContext.self = circularContext;
@@ -204,7 +204,7 @@ test("should handle validation with circular reference contexts", () => {
 
 test("should handle validation across different event types", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   // Same callback and context but different event types should be allowed
@@ -216,7 +216,7 @@ test("should handle validation across different event types", () => {
 
 test("should handle validation with different priorities", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   emitter.on("test", callback, context, 10);
@@ -229,7 +229,7 @@ test("should handle validation with different priorities", () => {
 
 test("should handle validation with priority and once combination", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   emitter.on("test", callback, context, 10);
@@ -242,7 +242,7 @@ test("should handle validation with priority and once combination", () => {
 
 test("should handle validation during concurrent operations", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   emitter.on("test", callback, context);
@@ -259,9 +259,9 @@ test("should handle validation during concurrent operations", () => {
 
 test("should distinguish between undefined contexts", () => {
   const emitter = new TestEmitter();
-  const callback1 = () => {};
-  const callback2 = () => {};
-  const callback3 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
+  const callback3 = (): void => {};
 
   assert.not.throws(() => {
     emitter.on("test", callback1, undefined);
@@ -272,7 +272,7 @@ test("should distinguish between undefined contexts", () => {
 
 test("should handle validation with bound functions", () => {
   const emitter = new TestEmitter();
-  const obj = { method: function () {} };
+  const obj = { method: function (): void {} };
   const context = { id: 1 };
 
   const boundMethod = obj.method.bind(obj);
@@ -288,7 +288,7 @@ test("should handle validation with arrow functions", () => {
   const emitter = new TestEmitter();
   const context = { id: 1 };
 
-  const arrowFunction = () => {};
+  const arrowFunction = (): void => {};
 
   emitter.on("test", arrowFunction, context);
 
@@ -299,8 +299,8 @@ test("should handle validation with arrow functions", () => {
 
 test("should handle validation stress test", () => {
   const emitter = new TestEmitter();
-  const callbacks: Array<() => void> = [];
-  const contexts: Array<{ id: number }> = [];
+  const callbacks: (() => void)[] = [];
+  const contexts: { id: number }[] = [];
 
   // Create unique callbacks and contexts
   for (let i = 0; i < 100; i++) {

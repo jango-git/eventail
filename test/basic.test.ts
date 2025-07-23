@@ -49,7 +49,7 @@ test("should remove event listeners with off()", () => {
   const emitter = new TestEmitter();
   let called = false;
 
-  const callback = () => {
+  const callback = (): void => {
     called = true;
   };
 
@@ -80,8 +80,8 @@ test("should remove all listeners for an event when no callback specified", () =
 
 test("should support method chaining", () => {
   const emitter = new TestEmitter();
-  const callback1 = () => {};
-  const callback2 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
 
   const result = emitter
     .on("test1", callback1)
@@ -125,7 +125,7 @@ test("should handle multiple listeners for same event", () => {
 
 test("should handle removing non-existent listeners gracefully", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
 
   // Should not throw when removing non-existent listener
   assert.not.throws(() => {
@@ -181,9 +181,9 @@ test("should maintain listener order during removal", () => {
   const emitter = new TestEmitter();
   const calls: string[] = [];
 
-  const callback1 = () => calls.push("callback1");
-  const callback2 = () => calls.push("callback2");
-  const callback3 = () => calls.push("callback3");
+  const callback1 = (): number => calls.push("callback1");
+  const callback2 = (): number => calls.push("callback2");
+  const callback3 = (): number => calls.push("callback3");
 
   emitter.on("test", callback1);
   emitter.on("test", callback2);
@@ -197,7 +197,7 @@ test("should maintain listener order during removal", () => {
 
 test("should clean up internal data structures when all listeners removed", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
 
   emitter.on("test", callback);
   emitter.off("test", callback);
@@ -211,7 +211,7 @@ test("should not remove real listeners when removing with fake callback/context"
   const emitter = new TestEmitter();
   let realCallbackCalled = false;
 
-  const realCallback = () => {
+  const realCallback = (): void => {
     realCallbackCalled = true;
   };
   const realContext = { id: "real" };
@@ -220,7 +220,7 @@ test("should not remove real listeners when removing with fake callback/context"
   emitter.on("test", realCallback, realContext);
 
   // Try to remove with fake callback but same context
-  const fakeCallback = () => {};
+  const fakeCallback = (): void => {};
   emitter.off("test", fakeCallback, realContext);
 
   // Try to remove with same callback but fake context
@@ -279,7 +279,7 @@ test("should remove numeric event listeners correctly", () => {
   const emitter = new TestEmitter();
   let called = false;
 
-  const callback = () => {
+  const callback = (): void => {
     called = true;
   };
 

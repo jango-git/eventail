@@ -94,10 +94,10 @@ test("should handle mixed operations performance", () => {
   const numOperations = 10000;
   let callCount = 0;
 
-  const callbacks: Array<() => void> = [];
-  const contexts: Array<{ id: number }> = [];
-  const emptyCallbacks: Array<() => void> = [];
-  const removeContexts: Array<{ id: number } | undefined> = [];
+  const callbacks: (() => void)[] = [];
+  const contexts: { id: number }[] = [];
+  const emptyCallbacks: (() => void)[] = [];
+  const removeContexts: ({ id: number } | undefined)[] = [];
 
   for (let i = 0; i < numOperations; i++) {
     callbacks.push(() => callCount++);
@@ -165,7 +165,10 @@ test("should handle memory efficiency with large arguments", () => {
     receivedSize = args.length;
   });
 
-  const largeArgs = Array.from({ length: 10000 }, (_, i) => i);
+  const largeArgs = Array.from({ length: 10000 }, (unusedValue, i) => {
+    void unusedValue;
+    return i;
+  });
 
   const startTime = Date.now();
   emitter.emit("test", ...largeArgs);
@@ -259,8 +262,8 @@ test("should handle priority ordering performance", () => {
 test("should handle context lookup performance", () => {
   const emitter = new TestEmitter();
   const numContexts = 10000;
-  const contexts: Array<{ id: number }> = [];
-  const callbacks: Array<() => void> = [];
+  const contexts: { id: number }[] = [];
+  const callbacks: (() => void)[] = [];
 
   // Create many contexts and callbacks
   for (let i = 0; i < numContexts; i++) {
@@ -291,8 +294,8 @@ test("should handle context lookup performance", () => {
 test("should handle context lookup performance with random priority", () => {
   const emitter = new TestEmitter();
   const numContexts = 10000;
-  const contexts: Array<{ id: number }> = [];
-  const callbacks: Array<() => void> = [];
+  const contexts: { id: number }[] = [];
+  const callbacks: (() => void)[] = [];
 
   // Create many contexts and callbacks
   for (let i = 0; i < numContexts; i++) {
@@ -335,12 +338,12 @@ test("should handle stress test with all operations", () => {
   const startTime = Date.now();
 
   for (let cycle = 0; cycle < numCycles; cycle++) {
-    const callbacks: Array<() => void> = [];
-    const contexts: Array<{ id: number }> = [];
+    const callbacks: (() => void)[] = [];
+    const contexts: { id: number }[] = [];
 
     // Add listeners
     for (let i = 0; i < 10; i++) {
-      const callback = () => totalCallCount++;
+      const callback = (): number => totalCallCount++;
       const context = { id: cycle * 10 + i };
       callbacks.push(callback);
       contexts.push(context);
@@ -381,7 +384,7 @@ test("should handle memory cleanup performance", () => {
   const startTime = Date.now();
 
   for (let i = 0; i < numCycles; i++) {
-    const callback = () => {};
+    const callback = (): void => {};
     const context = { id: i };
 
     emitter.on("test", callback, context);
@@ -410,13 +413,13 @@ test("should handle concurrent-like operations performance", () => {
   let callCount = 0;
 
   // Simulate concurrent-like operations by interleaving them
-  const callbacks: Array<() => void> = [];
-  const contexts: Array<{ id: number }> = [];
+  const callbacks: (() => void)[] = [];
+  const contexts: { id: number }[] = [];
 
   const startTime = Date.now();
 
   for (let i = 0; i < numOperations; i++) {
-    const callback = () => callCount++;
+    const callback = (): number => callCount++;
     const context = { id: i };
     callbacks.push(callback);
     contexts.push(context);

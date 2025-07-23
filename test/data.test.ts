@@ -57,7 +57,10 @@ test("should handle many arguments efficiently", () => {
     receivedArgs = args;
   });
 
-  const manyArgs = Array.from({ length: 50 }, (_, i) => i);
+  const manyArgs = Array.from({ length: 50 }, (unusedValue, i) => {
+    void unusedValue;
+    return i;
+  });
   emitter.emit("test", ...manyArgs);
   assert.equal(receivedArgs, manyArgs);
 });
@@ -70,7 +73,10 @@ test("should handle very large number of arguments", () => {
     receivedArgs = args;
   });
 
-  const veryManyArgs = Array.from({ length: 1000 }, (_, i) => i);
+  const veryManyArgs = Array.from({ length: 1000 }, (unusedValue, i) => {
+    void unusedValue;
+    return i;
+  });
   emitter.emit("test", ...veryManyArgs);
   assert.equal(receivedArgs, veryManyArgs);
 });
@@ -180,7 +186,7 @@ test("should handle function arguments", () => {
     receivedData = data;
   });
 
-  const testFunction = () => "test";
+  const testFunction = (): string => "test";
   emitter.emit("test", testFunction);
   assert.is(receivedData, testFunction);
   assert.is(receivedData(), "test");
@@ -273,7 +279,7 @@ test("should handle complex mixed argument types", () => {
     undefined,
     true,
     false,
-    () => "function",
+    (): string => "function",
     new Date(),
     /regex/,
     Symbol("symbol"),

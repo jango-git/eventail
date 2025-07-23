@@ -8,7 +8,7 @@ import { ListenerIndex } from "../src/ListenerIndex.js";
 
 test("should create empty index", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   assert.is(index.has(callback), false);
@@ -17,7 +17,7 @@ test("should create empty index", () => {
 
 test("should insert and find callback without context", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
 
   index.insert(callback);
   assert.is(index.has(callback), true);
@@ -26,7 +26,7 @@ test("should insert and find callback without context", () => {
 
 test("should insert and find callback with context", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   index.insert(callback, context);
@@ -36,8 +36,8 @@ test("should insert and find callback with context", () => {
 
 test("should handle multiple callbacks with same context", () => {
   const index = new ListenerIndex();
-  const callback1 = () => {};
-  const callback2 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
   const context = { id: 1 };
 
   index.insert(callback1, context);
@@ -49,7 +49,7 @@ test("should handle multiple callbacks with same context", () => {
 
 test("should handle same callback with different contexts", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
   const context1 = { id: 1 };
   const context2 = { id: 2 };
 
@@ -67,7 +67,7 @@ test("should handle same callback with different contexts", () => {
 
 test("should handle duplicate insertion gracefully", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   index.insert(callback, context);
@@ -85,7 +85,7 @@ test("should handle duplicate insertion gracefully", () => {
 
 test("should remove callback without context", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
 
   index.insert(callback);
   index.remove(callback);
@@ -94,7 +94,7 @@ test("should remove callback without context", () => {
 
 test("should remove callback with context", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
   const context = { id: 1 };
 
   index.insert(callback, context);
@@ -104,7 +104,7 @@ test("should remove callback with context", () => {
 
 test("should handle removal of non-existent callback", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
 
   assert.not.throws(() => {
     index.remove(callback);
@@ -114,8 +114,8 @@ test("should handle removal of non-existent callback", () => {
 
 test("should clean up context when all callbacks removed", () => {
   const index = new ListenerIndex();
-  const callback1 = () => {};
-  const callback2 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
   const context = { id: 1 };
 
   index.insert(callback1, context);
@@ -135,7 +135,7 @@ test("should clean up context when all callbacks removed", () => {
 
 test("should handle different object references as different contexts", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
 
   const context1 = { id: 1 };
   const context2 = { id: 1 }; // Same content, different reference
@@ -155,10 +155,10 @@ test("should handle functions with same implementation as different callbacks", 
   const index = new ListenerIndex();
   const context = { id: 1 };
 
-  const callback1 = () => {
+  const callback1 = (): string => {
     return "same";
   };
-  const callback2 = () => {
+  const callback2 = (): string => {
     return "same";
   };
 
@@ -175,7 +175,7 @@ test("should handle functions with same implementation as different callbacks", 
 
 test("should handle Symbol contexts", () => {
   const index = new ListenerIndex();
-  const callback = () => {};
+  const callback = (): void => {};
   const symbol1 = Symbol("context1");
   const symbol2 = Symbol("context2");
 
@@ -193,8 +193,8 @@ test("should handle Symbol contexts", () => {
 
 test("should handle multiple callbacks with same Symbol context", () => {
   const index = new ListenerIndex();
-  const callback1 = () => {};
-  const callback2 = () => {};
+  const callback1 = (): void => {};
+  const callback2 = (): void => {};
   const symbol = Symbol("shared");
 
   index.insert(callback1, symbol);
@@ -213,7 +213,7 @@ test("should handle multiple callbacks with same Symbol context", () => {
 // ============================================================================
 
 test("should create index with callback and Symbol context in constructor", () => {
-  const callback = () => {};
+  const callback = (): void => {};
   const symbol = Symbol("test");
 
   const index = new ListenerIndex(callback, symbol);
@@ -222,7 +222,7 @@ test("should create index with callback and Symbol context in constructor", () =
 });
 
 test("should create index with only callback in constructor", () => {
-  const callback = () => {};
+  const callback = (): void => {};
 
   const index = new ListenerIndex(callback);
   assert.is(index.has(callback), true);
@@ -233,13 +233,13 @@ test("should handle constructor with undefined callback", () => {
   const index = new ListenerIndex(undefined, { test: true });
 
   // Should not crash and should be empty
-  const testCallback = () => {};
+  const testCallback = (): void => {};
   assert.is(index.has(testCallback), false);
   assert.is(index.has(testCallback, { test: true }), false);
 });
 
 test("should handle constructor with undefined context", () => {
-  const callback = () => {};
+  const callback = (): void => {};
 
   const index = new ListenerIndex(callback, undefined);
   assert.is(index.has(callback), true);
@@ -253,8 +253,8 @@ test("should handle constructor with undefined context", () => {
 test("should handle large number of operations efficiently", () => {
   const index = new ListenerIndex();
   const numCallbacks = 1000;
-  const callbacks: Array<() => number> = [];
-  const contexts: Array<{ id: number }> = [];
+  const callbacks: (() => number)[] = [];
+  const contexts: { id: number }[] = [];
 
   // Create callbacks and contexts
   for (let i = 0; i < numCallbacks; i++) {
@@ -298,8 +298,8 @@ test("should handle large number of operations efficiently", () => {
 
 test("should handle mixed operations sequence", () => {
   const index = new ListenerIndex();
-  const callback1 = () => 1;
-  const callback2 = () => 2;
+  const callback1 = (): number => 1;
+  const callback2 = (): number => 2;
   const context1 = { id: 1 };
   const context2 = { id: 2 };
 

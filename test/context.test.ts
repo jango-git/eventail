@@ -56,14 +56,14 @@ test("should handle complex nested context objects", () => {
 
   const context1 = {
     nested: { value: "test1" },
-    method: function () {
+    method: function (): string {
       return this.nested.value;
     },
   };
 
   const context2 = {
     nested: { value: "test2" },
-    method: function () {
+    method: function (): string {
       return this.nested.value;
     },
   };
@@ -124,7 +124,7 @@ test("should handle same callback with different contexts", () => {
   const context2 = { id: 2 };
   const results: number[] = [];
 
-  const callback = function (this: { id: number }) {
+  const callback = function (this: { id: number }): void {
     results.push(this.id);
   };
 
@@ -141,11 +141,11 @@ test("should handle different callbacks with same context", () => {
   const context = { value: "shared" };
   const results: string[] = [];
 
-  const callback1 = function (this: typeof context) {
+  const callback1 = function (this: typeof context): void {
     results.push(`callback1-${this.value}`);
   };
 
-  const callback2 = function (this: typeof context) {
+  const callback2 = function (this: typeof context): void {
     results.push(`callback2-${this.value}`);
   };
 
@@ -175,7 +175,7 @@ test("should handle arrow functions with context (context binding won't work)", 
   emitter.on(
     "test",
     function (this: typeof context) {
-      results.push(this ? this.value : "no-context");
+      results.push(this.value);
     },
     context,
   );
@@ -191,7 +191,7 @@ test("should remove listeners with specific context", () => {
   const context2 = { id: 2 };
   const results: number[] = [];
 
-  const callback = function (this: { id: number }) {
+  const callback = function (this: { id: number }): void {
     results.push(this.id);
   };
 
@@ -209,7 +209,7 @@ test("should remove listeners with specific context", () => {
 
 test("should handle object references as different contexts", () => {
   const emitter = new TestEmitter();
-  const callback = () => {};
+  const callback = (): void => {};
 
   const context1 = { id: 1 };
   const context2 = { id: 1 }; // Same content, different reference
@@ -252,10 +252,10 @@ test("should handle context with methods that reference each other", () => {
 
   const context = {
     value: "test",
-    getValue: function () {
+    getValue: function (): string {
       return this.value;
     },
-    getFormattedValue: function () {
+    getFormattedValue: function (): string {
       return `formatted-${this.getValue()}`;
     },
   };
@@ -279,7 +279,7 @@ test("should handle context with getters and setters", () => {
 
   const context = {
     _value: "initial",
-    get value() {
+    get value(): string {
       return this._value;
     },
     set value(val: string) {
@@ -313,7 +313,7 @@ test("should handle context with prototype methods", () => {
       this.value = value;
     }
 
-    getValue() {
+    public getValue(): string {
       return this.value;
     }
   }
@@ -336,7 +336,7 @@ test("should handle context with prototype methods", () => {
 test("should handle context cleanup when listeners are removed", () => {
   const emitter = new TestEmitter();
   const context = { id: "test" };
-  const callback = () => {};
+  const callback = (): void => {};
 
   emitter.on("test", callback, context);
   emitter.off("test", callback, context);

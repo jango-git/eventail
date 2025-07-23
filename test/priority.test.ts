@@ -218,9 +218,10 @@ test("should maintain priority order after listener removal", () => {
   const emitter = new TestEmitter();
   const executionOrder: string[] = [];
 
-  const callback1 = () => executionOrder.push("first");
-  const callback2 = () => executionOrder.push("second");
-  const callback3 = () => executionOrder.push("third");
+  const callback1 = (): number => executionOrder.push("first");
+
+  const callback2 = (): number => executionOrder.push("second");
+  const callback3 = (): number => executionOrder.push("third");
 
   emitter.on("test", callback1, undefined, 10);
   emitter.on("test", callback2, undefined, 20);
