@@ -1,9 +1,9 @@
-<table>
+<table style="border: none;">
 <tr>
-<td>
-  <img src="assets/logotype.svg" alt="Eventail Logo" width="120">
+<td style="border: none; vertical-align: middle;">
+  <img src="assets/logotype.svg" alt="Eventail Logo" width="160">
 </td>
-<td>
+<td style="border: none; vertical-align: middle;">
   <h1>Eventail</h1>
   <p>A tiny, typed priority event emitter abstract class that makes complex event handling easy.</p>
 </td>
