@@ -94,29 +94,38 @@ test("should handle mixed operations performance", () => {
   const numOperations = 10000;
   let callCount = 0;
 
+  const callbacks: Array<() => void> = [];
+  const contexts: Array<{ id: number }> = [];
+  const emptyCallbacks: Array<() => void> = [];
+  const removeContexts: Array<{ id: number } | undefined> = [];
+
+  for (let i = 0; i < numOperations; i++) {
+    callbacks.push(() => callCount++);
+    contexts.push({ id: i });
+    emptyCallbacks.push(() => {});
+    if (i >= 10) {
+      removeContexts.push({ id: i - 10 });
+    } else {
+      removeContexts.push(undefined);
+    }
+  }
+
   const startTime = Date.now();
 
   for (let i = 0; i < numOperations; i++) {
-    const callback = () => callCount++;
-    const context = { id: i };
+    emitter.on("test", callbacks[i], contexts[i]);
 
-    // Add listener
-    emitter.on("test", callback, context);
-
-    // Emit occasionally
     if (i % 10 === 0) {
       emitter.emit("test");
     }
 
-    // Remove some listeners
     if (i % 20 === 0 && i > 0) {
-      emitter.off("test", () => {}, { id: i - 10 });
+      emitter.off("test", emptyCallbacks[i], removeContexts[i]);
     }
   }
 
   const duration = Date.now() - startTime;
 
-  // Should complete reasonably fast
   const requiredDuration = 200;
   assert.ok(
     duration < requiredDuration,
