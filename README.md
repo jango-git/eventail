@@ -1,14 +1,8 @@
-<table style="border: none;">
-<tr>
-<td style="border: none; vertical-align: middle;">
-  <img src="assets/logotype.svg" alt="Eventail Logo" width="160">
-</td>
-<td style="border: none; vertical-align: middle;">
-  <h1>Eventail</h1>
-  <p>A tiny, typed priority event emitter abstract class that makes complex event handling easy.</p>
-</td>
-</tr>
-</table>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jango-git/eventail/main/assets/logotype.svg" width="160" alt="Eventail logo"><br/>
+  <strong style="font-size: 1.5em;">Eventail</strong><br/>
+  <em>A tiny, typed priority event emitter abstract class</em>
+</p>
 
 [![npm version](https://img.shields.io/npm/v/eventail.svg)](https://www.npmjs.com/package/eventail)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
