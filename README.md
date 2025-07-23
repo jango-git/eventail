@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/jango-git/eventail/main/assets/logotype.svg" width="200" alt="Eventail logo"><br/>
-  <strong style="font-size: 1.5em;">Eventail</strong><br/>
+  <strong style="font-size: 2em;">Eventail</strong><br/>
   <em>A tiny, typed priority event emitter abstract class</em>
 </p>
 
