@@ -1,6 +1,14 @@
-# Eventail
-
-A tiny, typed priority event emitter abstract class that makes complex event handling easy.
+<table>
+<tr>
+<td>
+  <img src="assets/logotype.svg" alt="Eventail Logo" width="120">
+</td>
+<td>
+  <h1>Eventail</h1>
+  <p>A tiny, typed priority event emitter abstract class that makes complex event handling easy.</p>
+</td>
+</tr>
+</table>
 
 [![npm version](https://img.shields.io/npm/v/eventail.svg)](https://www.npmjs.com/package/eventail)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -92,13 +100,13 @@ Lower numbers = higher priority:
 
 ```typescript
 // High priority (-50) - using string event
-events.on('event', () => console.log('First'), null, -50);
+events.on('event', () => console.log('First'), undefined, -50);
 
 // Default priority (0) - using number event
 events.on(42, () => console.log('Second'));
 
 // Low priority (50) - using string event
-events.on('event', () => console.log('Third'), null, 50);
+events.on('event', () => console.log('Third'), undefined, 50);
 ```
 
 ### Removing Listeners
