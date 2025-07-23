@@ -6,9 +6,17 @@
   </p>
 </p>
 
-[![npm version](https://img.shields.io/npm/v/eventail.svg)](https://www.npmjs.com/package/eventail)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-%5E5.8.0-blue)](https://www.typescriptlang.org/)
+<p align="center">
+  <a href="https://www.npmjs.com/package/eventail">
+    <img src="https://img.shields.io/npm/v/eventail.svg" alt="npm version">
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  </a>
+  <a href="https://www.typescriptlang.org/">
+    <img src="https://img.shields.io/badge/TypeScript-%5E5.8.0-blue" alt="TypeScript">
+  </a>
+</p>
 
 ## Features
 
