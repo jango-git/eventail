@@ -176,18 +176,6 @@ test("should handle validation with complex contexts", () => {
   }, /Event listener already exists/);
 });
 
-test("should handle validation with symbol contexts", () => {
-  const emitter = new TestEmitter();
-  const callback = (): void => {};
-  const symbolContext = Symbol("test");
-
-  emitter.on("test", callback, symbolContext);
-
-  assert.throws(() => {
-    emitter.on("test", callback, symbolContext);
-  }, /Event listener already exists/);
-});
-
 test("should handle validation with circular reference contexts", () => {
   const emitter = new TestEmitter();
   const callback = (): void => {};

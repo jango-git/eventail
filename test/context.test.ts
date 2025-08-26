@@ -89,35 +89,6 @@ test("should handle complex nested context objects", () => {
   assert.equal(results, ["test1", "test2"]);
 });
 
-test("should handle symbols as contexts", () => {
-  const emitter = new TestEmitter();
-  const symbol1 = Symbol("context1");
-  const symbol2 = Symbol("context2");
-  const results: string[] = [];
-
-  emitter.on(
-    "test",
-    function (this: Symbol) {
-      results.push(this.toString());
-    },
-    symbol1,
-  );
-
-  emitter.on(
-    "test",
-    function (this: Symbol) {
-      results.push(this.toString());
-    },
-    symbol2,
-  );
-
-  emitter.emit("test");
-
-  assert.is(results.length, 2);
-  assert.ok(results[0].includes("Symbol(context1)"));
-  assert.ok(results[1].includes("Symbol(context2)"));
-});
-
 test("should handle same callback with different contexts", () => {
   const emitter = new TestEmitter();
   const context1 = { id: 1 };

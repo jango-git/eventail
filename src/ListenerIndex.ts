@@ -1,8 +1,7 @@
+import type { Callback } from "./Eventail";
+
 /**
- * A high-performance index for tracking listener callback and context pairs.
- *
- * Provides fast duplicate detection for event listener registration by maintaining
- * an optimized data structure that maps contexts to their associated callback functions.
+ * Index for tracking listener callback and context pairs.
  * Uses WeakMap for automatic garbage collection of context objects.
  *
  * @example
@@ -19,30 +18,28 @@
  * @internal
  */
 export class ListenerIndex {
-  /** Maps context objects to their associated callback functions */
-  private readonly contextMap = new WeakMap<
-    object | Symbol,
-    Map<Function, number>
-  >();
-  /** Stores callbacks that have no associated context */
-  private readonly noContextCallbacks = new Map<Function, number>();
+  /** Maps context objects to their callback functions */
+  private readonly contextMap = new WeakMap<object, Map<Callback, number>>();
+  /** Stores callbacks with no context */
+  private readonly noContextCallbacks = new Map<Callback, number>();
 
   /**
    * Creates a new ListenerIndex instance with an initial callback-context pair.
    *
    * @param callback - The initial callback function to register
-   * @param context - Optional context object or Symbol to associate with the callback
+   * @param context - Optional context object to associate with the callback
+   * @param priority - Priority value for the callback
    *
    * @internal
    */
-  constructor(callback?: Function, context?: object | Symbol, priority = 0) {
+  constructor(callback?: Callback, context?: object, priority = 0) {
     if (callback !== undefined) {
       if (context === undefined) {
         this.noContextCallbacks.set(callback, priority);
       } else {
         this.contextMap.set(
           context,
-          new Map<Function, number>([[callback, priority]]),
+          new Map<Callback, number>([[callback, priority]]),
         );
       }
     }
@@ -51,19 +48,13 @@ export class ListenerIndex {
   /**
    * Inserts a callback-context pair into the index.
    *
-   * If the pair already exists, this operation has no effect.
-   * Uses WeakMap for context-based storage to enable automatic garbage collection.
-   *
    * @param callback - The callback function to register
-   * @param context - Optional context object or Symbol to associate with the callback
+   * @param context - Optional context object to associate with the callback
+   * @param priority - Priority value for the callback
    *
    * @internal
    */
-  public insert(
-    callback: Function,
-    context?: object | Symbol,
-    priority = 0,
-  ): void {
+  public insert(callback: Callback, context?: object, priority = 0): void {
     if (context === undefined) {
       if (this.noContextCallbacks.has(callback)) {
         return;
@@ -77,7 +68,7 @@ export class ListenerIndex {
     if (callbacks === undefined) {
       this.contextMap.set(
         context,
-        new Map<Function, number>([[callback, priority]]),
+        new Map<Callback, number>([[callback, priority]]),
       );
     } else if (!callbacks.has(callback)) {
       callbacks.set(callback, priority);
@@ -86,16 +77,14 @@ export class ListenerIndex {
 
   /**
    * Removes a callback-context pair from the index.
-   *
-   * If the pair doesn't exist, this operation has no effect.
-   * Automatically cleans up empty context entries to prevent memory leaks.
+   * Cleans up empty context entries.
    *
    * @param callback - The callback function to remove
-   * @param context - Optional context object or Symbol associated with the callback
+   * @param context - Optional context object associated with the callback
    *
    * @internal
    */
-  public remove(callback: Function, context?: object | Symbol): void {
+  public remove(callback: Callback, context?: object): void {
     if (context === undefined) {
       this.noContextCallbacks.delete(callback);
       return;
@@ -116,16 +105,13 @@ export class ListenerIndex {
   /**
    * Checks if a callback-context pair exists in the index.
    *
-   * This is the primary operation for duplicate detection and is optimized
-   * for maximum performance with O(1) average time complexity.
-   *
    * @param callback - The callback function to check
-   * @param context - Optional context object or Symbol to check association with
+   * @param context - Optional context object to check association with
    * @returns `true` if the pair exists, `false` otherwise
    *
    * @internal
    */
-  public has(callback: Function, context?: object | Symbol): boolean {
+  public has(callback: Callback, context?: object): boolean {
     if (context === undefined) {
       return this.noContextCallbacks.has(callback);
     }
@@ -139,19 +125,13 @@ export class ListenerIndex {
   /**
    * Retrieves the priority value for a callback-context pair.
    *
-   * This method allows querying the priority of a registered listener
-   * for potential reordering or priority-based operations.
-   *
    * @param callback - The callback function to check
-   * @param context - Optional context object or Symbol to check association with
+   * @param context - Optional context object to check association with
    * @returns The priority value if the pair exists, `undefined` otherwise
    *
    * @internal
    */
-  public getPriority(
-    callback: Function,
-    context?: object | Symbol,
-  ): number | undefined {
+  public getPriority(callback: Callback, context?: object): number | undefined {
     if (context === undefined) {
       return this.noContextCallbacks.get(callback);
     }

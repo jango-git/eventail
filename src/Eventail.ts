@@ -23,7 +23,7 @@ interface Listener {
   _callback: Callback;
 
   /** Optional context object or Symbol for the callback execution */
-  _context?: object | Symbol;
+  _context?: object;
 
   /** Priority of the event listener. Lower values indicate higher priority */
   _priority: number;
@@ -58,14 +58,11 @@ interface ListenerData {
 }
 
 /**
- * Abstract base class for high-performance, priority-based event emitters.
+ * Abstract base class for priority-based event emitters.
  *
- * The name "Eventail" is a combination of "event" + "tail", reflecting its queue-like nature.
- * Features priority-based event listeners, context binding support, one-time event listeners,
- * type-safe event handling, and is optimized for performance.
- *
- * This class is designed to be extended by concrete implementations that can
- * emit events internally using the protected `emit` method.
+ * Supports priority-based event listeners, context binding, and one-time event listeners.
+ * Must be extended by concrete implementations. Only the extending class can emit events
+ * internally using the protected `emit` method.
  *
  * @example
  * ```typescript
@@ -74,7 +71,6 @@ interface ListenerData {
  *
  *   public takeDamage(amount: number) {
  *     this.health = Math.max(0, this.health - amount);
- *     // Emit internal state change event
  *     this.emit('healthChanged', this.health);
  *
  *     if (this.health <= 0) {
@@ -84,14 +80,8 @@ interface ListenerData {
  * }
  *
  * const gameObject = new GameObject();
- *
- * // Listen to internal state changes
  * gameObject.on('healthChanged', (health) => console.log('Health:', health));
  * gameObject.on('died', () => console.log('Game Over'));
- *
- * // Internal state change triggers events
- * gameObject.takeDamage(50); // Health: 50
- * gameObject.takeDamage(60); // Health: 0, Game Over
  * ```
  *
  * @public
@@ -104,12 +94,12 @@ export abstract class Eventail {
    * Adds an event listener for the specified event type.
    *
    * Listeners are executed in priority order (lower values first).
-   * The execution order of listeners with the same priority is undefined.
+   * Listeners with the same priority may execute in any order.
    *
    * @param type - The event type (string or number) to listen for
    * @param callback - The function to be called when the event is emitted
-   * @param context - Optional this context object or Symbol for the callback
-   * @param priority - Optional priority value (lower = higher priority)
+   * @param context - Optional this context object for the callback
+   * @param priority - Optional priority value (lower = higher priority, default: 0)
    * @returns The emitter instance for chaining
    *
    * @public
@@ -117,23 +107,23 @@ export abstract class Eventail {
   public on(
     type: string | number,
     callback: Callback,
-    context?: object | Symbol,
+    context?: object,
     priority = 0,
-  ): Eventail {
+  ): this {
     this.addListener(type, false, priority, callback, context);
     return this;
   }
 
   /**
-   * Adds a one-time event listener that will be removed after first execution.
+   * Adds a one-time event listener that removes itself after first execution.
    *
    * Listeners are executed in priority order (lower values first).
-   * The execution order of listeners with the same priority is undefined.
+   * Listeners with the same priority may execute in any order.
    *
    * @param type - The event type (string or number) to listen for
    * @param callback - The function to be called when the event is emitted
-   * @param context - Optional this context object or Symbol for the callback
-   * @param priority - Optional priority value (lower = higher priority)
+   * @param context - Optional this context object for the callback
+   * @param priority - Optional priority value (lower = higher priority, default: 0)
    * @returns The emitter instance for chaining
    *
    * @public
@@ -141,7 +131,7 @@ export abstract class Eventail {
   public once(
     type: string | number,
     callback: Callback,
-    context?: object | Symbol,
+    context?: object,
     priority = 0,
   ): this {
     this.addListener(type, true, priority, callback, context);
@@ -157,7 +147,7 @@ export abstract class Eventail {
    *
    * @param type - The event type (string or number) to remove listener(s) from
    * @param callback - Optional callback to remove specific listener
-   * @param context - Optional context object or Symbol to match when removing
+   * @param context - Optional context object to match when removing
    * @returns The emitter instance for chaining
    *
    * @public
@@ -165,8 +155,8 @@ export abstract class Eventail {
   public off(
     type: string | number,
     callback?: Callback,
-    context?: object | Symbol,
-  ): Eventail {
+    context?: object,
+  ): this {
     const listenerData = this.listeners.get(type);
     if (listenerData === undefined) {
       return this;
@@ -267,9 +257,7 @@ export abstract class Eventail {
    * Listeners are called in priority order (lower priority values first).
    * One-time listeners are automatically removed after execution.
    *
-   * This method is protected to allow the inheriting class to emit events
-   * internally when its state changes, maintaining encapsulation by preventing
-   * external entities from directly triggering events.
+   * This method is protected so only the extending class can emit events internally.
    *
    * @param type - The event type (string or number) to emit
    * @param args - Arguments to pass to the listeners
@@ -355,16 +343,16 @@ export abstract class Eventail {
   }
 
   /**
-   * Internal method to add a new event listener with the specified configuration.
+   * Adds a new event listener with the specified configuration.
    *
-   * Uses binary search for optimal priority-based insertion.
+   * Uses binary search for priority-based insertion.
    * Prevents duplicate listeners by checking the listener index.
    *
    * @param type - The event type (string or number) to listen for
    * @param once - Whether the listener should be removed after first execution
    * @param priority - Priority value for the listener (lower = higher priority)
    * @param callback - The callback function
-   * @param context - Optional context object or Symbol for the callback
+   * @param context - Optional context object for the callback
    *
    * @throws Error when attempting to add a duplicate listener
    *
@@ -375,7 +363,7 @@ export abstract class Eventail {
     once: boolean,
     priority: number,
     callback: Callback,
-    context?: object | Symbol,
+    context?: object,
   ): void {
     let listenerData = this.listeners.get(type);
 

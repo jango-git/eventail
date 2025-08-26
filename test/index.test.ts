@@ -172,54 +172,9 @@ test("should handle functions with same implementation as different callbacks", 
   assert.is(index.has(callback1, context), false);
   assert.is(index.has(callback2, context), true);
 });
-
-test("should handle Symbol contexts", () => {
-  const index = new ListenerIndex();
-  const callback = (): void => {};
-  const symbol1 = Symbol("context1");
-  const symbol2 = Symbol("context2");
-
-  index.insert(callback, symbol1);
-  index.insert(callback, symbol2);
-
-  assert.is(index.has(callback, symbol1), true);
-  assert.is(index.has(callback, symbol2), true);
-  assert.is(index.has(callback), false);
-
-  index.remove(callback, symbol1);
-  assert.is(index.has(callback, symbol1), false);
-  assert.is(index.has(callback, symbol2), true);
-});
-
-test("should handle multiple callbacks with same Symbol context", () => {
-  const index = new ListenerIndex();
-  const callback1 = (): void => {};
-  const callback2 = (): void => {};
-  const symbol = Symbol("shared");
-
-  index.insert(callback1, symbol);
-  index.insert(callback2, symbol);
-
-  assert.is(index.has(callback1, symbol), true);
-  assert.is(index.has(callback2, symbol), true);
-
-  index.remove(callback1, symbol);
-  assert.is(index.has(callback1, symbol), false);
-  assert.is(index.has(callback2, symbol), true);
-});
-
 // ============================================================================
 // Constructor Edge Cases
 // ============================================================================
-
-test("should create index with callback and Symbol context in constructor", () => {
-  const callback = (): void => {};
-  const symbol = Symbol("test");
-
-  const index = new ListenerIndex(callback, symbol);
-  assert.is(index.has(callback, symbol), true);
-  assert.is(index.has(callback), false);
-});
 
 test("should create index with only callback in constructor", () => {
   const callback = (): void => {};
